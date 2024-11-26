@@ -44,7 +44,7 @@ def close_TE_gap(points, Node_IDs_upper_surface, n):
     points_origin = points[:,1:] - LE_coordinates_shaped
     
     """" Rotate """
-    # 2D Rotation matrix for -z axis rotation 
+    # 2D Rotation matrix for -z axis rotation N_wake=2-N_par=500-n_points=43-cosine_LE
     Rz_neg = np.array([
         [np.cos(angle_radians), np.sin(angle_radians)],
         [-np.sin(angle_radians),  np.cos(angle_radians)]
@@ -86,6 +86,9 @@ def close_TE_gap(points, Node_IDs_upper_surface, n):
     """ Move to Original position """
     points_new_scaled_rotated[:,1:] = points_new_scaled_rotated[:,1:] + LE_coordinates_shaped
     
-    # Remove repeating TE
-    points_new = points_new_scaled_rotated[:-1,:] 
+    points_new = points_new_scaled_rotated
+    
+    # # Remove repeating TE
+    # points_new = points_new_scaled_rotated[:-1,:] 
+    
     return points_new
