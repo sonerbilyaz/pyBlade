@@ -53,7 +53,7 @@ def spanwise_disribution(z_min, z_max, spanwise_panel_num, dist, r_R):
         return points
     
     if dist == "cosine_TIP":
-        angles  = np.linspace(np.radians(0), np.radians(90), 2*int((1-r_R) * spanwise_panel_num))
+        angles  = np.linspace(np.radians(0), np.radians(90), int(2.2*(1-r_R)*spanwise_panel_num))
         
         # Uniform part towards root. Remove extra end point
         x1 = np.linspace(0, r_R, int(r_R * spanwise_panel_num))
