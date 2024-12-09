@@ -60,10 +60,15 @@ def spanwise_disribution(z_min, z_max, spanwise_panel_num, dist, r_R):
         x1 = np.delete(x1, -1)
         # cosine TIP part
         x2 = normalize(np.sin(angles), r_R, 1)
+        
         # Connect them
         points = np.hstack((x1,x2))
         # Map points to [z_min, z_max]
         points = z_min + points * (z_max - z_min)
+        
+        ## Remove the 2nd last element since it creates skew panels
+        points = np.delete(points,-2)
+        
         return points
     
     elif dist == "uniform":

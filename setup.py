@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-REQUIREMENTS = ["cadquery", "numpy==1.24.4", "nlopt==2.7.1", "spyder", "spyder-kernels==2.5.*"]
+REQUIREMENTS = ["cadquery", "numpy==1.24.4", "nlopt==2.7.1", "spyder", "spyder-kernels==2.5.*", "h5py"]
 
 setup(
       name="mesh_from_CAD",
