@@ -26,9 +26,6 @@ stp_file = f'{working_dir}/12x6_ClarkY-1_Blade_LE_at_the_mid_face_little_modific
 surf_type = 'propeller'     # Surface type (wing/propeller)
 number_of_blades = 2        # Number of blades
 
-remove_TE = True            # Should we remove TE ??
-close_TE = True             # Should we close the TE gap ??
-
 rotation_center = [0, 0, 0]
 rotation_axis = [0, -1, 0]
 
@@ -38,13 +35,15 @@ rotation_axis = [0, -1, 0]
 num_points = 19
 dist_airfoil = 'cosine_LE'
 
-# TE_inflation = 0.1  ## r/R ratio at which TE detection method will switch (due to the local pitch change from root to tip) based on the x-coordinate comparison
+remove_TE = True            # Should we remove TE ??
+close_TE = True             # Should we close the TE gap ??
 
 """ Spanwise Cutting Planes """
 spanwise_panel_num= 45
-z_min, z_max = 44.5, 152                  ## in mm
+z_min, z_max = 44.5, 152                ## in mm
+
 dist_spanwise = 'cosine_TIP'
-r_R = 0.8                              ## Start span location of the cosine_TIP 
+r_R = 0.8                               ## Span location to start the cosine_TIP 
   
 """###############################################################################"""
 
@@ -64,7 +63,7 @@ ALL_sections, all_sections_compound = points.get_coords(stp_file, num_points, di
 cq.exporters.export(all_sections_compound, f"{output_dir}/all_cross_sections.step")
 
 ###### GENERATE MESH AND EXPORT #######
-mesh = generate_mesh(ALL_sections)
+mesh = generate_mesh(ALL_sections, number_of_blades)
 meshio.write(f'{output_dir}/propeller_mesh.vtk', mesh)
 
 
@@ -93,7 +92,11 @@ with open(f'{output_dir}/Blade_points_check.txt', 'w') as file:
     file.write('Node_ID\tX(mm)\tY(mm)\tZ(mm)\n')
     for i in range(len(ALL_sections)):
         np.savetxt(file, ALL_sections[i], delimiter='\t', fmt=['%.0f','%.9f','%.9f','%.9f'], comments='')
-        
+
+# Propeller coordinates
+with open(f'{output_dir}/propeller_points.txt', 'w') as file:
+    file.write('X(mm)\tY(mm)\tZ(mm)\n')
+    np.savetxt(file, mesh.points, delimiter='\t', fmt=['%.9f','%.9f','%.9f'], comments='')
 ###############################################################################################################################
 
 end_time = timer()  # End the timer
