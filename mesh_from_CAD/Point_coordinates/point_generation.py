@@ -85,6 +85,8 @@ def get_coords(stp_file, num_points, dist_airfoil, z_planes, remove_TE, close_TE
         # Check for closing the TE[:,1:]*1e-03
         if close_TE is True:
             data = modify.close_TE_gap(data, Node_ID_one_surf, n=10)
+            # After closing the TE, remove extra TE point, which is the last element
+            data = np.delete(data, -1, axis=0)
         
         # Convert from mm to meter
         data[:,1:] = data[:,1:]*1e-03

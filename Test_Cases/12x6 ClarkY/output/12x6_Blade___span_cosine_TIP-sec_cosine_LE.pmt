@@ -1,4 +1,12 @@
-Node_ID	X(mm)	Y(mm)	Z(mm)
+######## Panel parameters ########
+type = propeller
+n_blades = 2
+
+rotation_center = [0, 0, 0]
+rotation_axis = [0, -1, 0]
+n_span_all = 61
+n_points = 36
+######## End of parameters ########
 1	0.005348679	0.009648975	0.024000000
 2	0.005069649	0.008162481	0.024000000
 3	0.004530070	0.006520184	0.024000000
