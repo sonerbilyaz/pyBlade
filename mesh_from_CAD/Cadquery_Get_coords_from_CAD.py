@@ -41,15 +41,13 @@ spanwise_panel_num= 52
 z_min, z_max = 24, 152                ## in mm
 
 dist_spanwise = 'cosine_TIP'
-r_R = 0.8                               ## Span location to start the cosine_TIP 
-
+r_R = 0.83                               ## Span location to start the cosine_TIP 
 """###############################################################################"""
 
 if close_TE is True:
     TE_property = ''
 else:
-    TE_property='-OPEN_TE'
-    
+    TE_property='-OPEN_TE'    
 ################################
 
 output_dir = f'{working_dir}/output'
@@ -65,9 +63,8 @@ ALL_sections, all_sections_compound = points.get_coords(stp_file, num_points, di
     
 ###### GENERATE MESH AND EXPORT #######
 # Generate mesh #
-mesh, coordinates, connectivity_DUST = generate_mesh(ALL_sections, n_blades, close_TE)
+mesh, mesh_DUST, coordinates_DUST, connectivity_DUST = generate_mesh(ALL_sections, n_blades, close_TE)
 
-## (For visualization export) ##
 import meshio
 meshio.write(f'{output_dir}/12x6_mesh___span_{dist_spanwise}-sec_{dist_airfoil}{TE_property}.vtk', mesh, file_format='vtk')
 
@@ -75,9 +72,11 @@ meshio.write(f'{output_dir}/12x6_mesh___span_{dist_spanwise}-sec_{dist_airfoil}{
 DUST_dir = f'{output_dir}/DUST_input___span_{dist_spanwise}-sec_{dist_airfoil}{TE_property}'
 if os.path.isdir(DUST_dir) is False:
     os.mkdir(DUST_dir)
-    
+
+meshio.write(f'{DUST_dir}/mesh_DUST.vtk', mesh_DUST, file_format='vtk')
+
 with open(f'{DUST_dir}/rr.dat', 'w') as file:
-    np.savetxt(file, coordinates, delimiter='\t', fmt=['%.8f','%.8f','%.8f'], comments='')
+    np.savetxt(file, coordinates_DUST, delimiter='\t', fmt=['%.8f','%.8f','%.8f'], comments='')
 
 with open(f'{DUST_dir}/ee.dat', 'w') as file:
     np.savetxt(file, connectivity_DUST, delimiter='\t', fmt=['%.0f','%.0f','%.0f','%.0f'], comments='')
@@ -90,13 +89,13 @@ with open(f'{DUST_dir}/ee.dat', 'w') as file:
 
 with open(f'{output_dir}/12x6_Blade___span_{dist_spanwise}-sec_{dist_airfoil}{TE_property}.pmt', 'w') as file:
     file.write('######## Panel parameters ########\n')
-    file.write(f'type = {surf_type}\n')
-    file.write(f'n_blades = {n_blades}\n\n')
-    file.write(f'rotation_center = {rotation_center}\n')
-    file.write(f'rotation_axis = {rotation_axis}\n')
+    file.write(f'type={surf_type}\n')
+    file.write(f'n_blades={n_blades}\n\n')
+    file.write(f'rotation_center={rotation_center}\n')
+    file.write(f'rotation_axis={rotation_axis}\n')
     
-    file.write('n_span_all = ' + str(len(ALL_sections)) + '\n')
-    file.write('n_points = ' + str(len(ALL_sections[0][:,0])) + '\n')
+    file.write('n_span_all=' + str(len(ALL_sections)) + '\n')
+    file.write('n_points=' + str(len(ALL_sections[0][:,0])) + '\n')
     file.write('######## End of parameters ########\n')
     
     for i in range(len(ALL_sections)):
@@ -107,13 +106,6 @@ with open(f'{output_dir}/Blade_points_check.txt', 'w') as file:
     file.write('Node_ID\tX(mm)\tY(mm)\tZ(mm)\n')
     for i in range(len(ALL_sections)):
         np.savetxt(file, ALL_sections[i], delimiter='\t', fmt=['%.0f','%.9f','%.9f','%.9f'], comments='')
-
-"""
-# Propeller coordinates
-with open(f'{output_dir}/propeller_points.txt', 'w') as file:
-    file.write('X(mm)\tY(mm)\tZ(mm)\n')
-    np.savetxt(file, mesh.points, delimiter='\t', fmt=['%.9f','%.9f','%.9f'], comments='')
-"""
 
 ###############################################################################################################################
 end_time = timer()  # End the timer
