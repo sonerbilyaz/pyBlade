@@ -1,13 +1,13 @@
 from setuptools import setup, find_packages
 
-REQUIREMENTS = ["cadquery", "numpy==1.24.4", "nlopt==2.7.1", "spyder", "spyder-kernels==2.5.*", "h5py"]
+REQUIREMENTS = ["cadquery", "numpy==1.24.4", "nlopt==2.7.1", "spyder", "spyder-kernels==2.5.*", "meshio"]
 
 setup(
-      name="mesh_from_CAD",
+      name="Blade_mesher",
       version="0.1.0",
       author="Soner Bilyaz",
       author_email="un24029@bristol.ac.uk",
-      description="Python Code which generates structured meshes with the cadquery library",
+      description="Python code which generates structured meshes for propeller blades",
       long_description=open("README.md").read(),                                # Describe it in detail with a README file
       packages=find_packages(),                                                 # Automatically find and include all packages and subpackages
       install_requires=REQUIREMENTS,                                            # List of dependencies
