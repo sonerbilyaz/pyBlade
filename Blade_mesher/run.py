@@ -33,11 +33,11 @@ rotation_axis = [0, -1, 0]
 
 ############################ Panel Parameters #################################
 ### Airfoil Section ###
-num_points = 19                         ## Upper and Lower surf separately!!
+num_points = 25                         ## Upper and Lower surf separately!!
 dist_airfoil = 'cosine_LE'
 
 ### Spanwise Cutting Planes ###
-spanwise_panel_num= 60
+spanwise_panel_num= 55
 z_min, z_max = 24, 152                ## in mm
 
 dist_spanwise = 'cosine_TIP'
@@ -62,15 +62,15 @@ ALL_sections, all_sections_compound = points.get_coords(stp_file, num_points, di
     
 ###### GENERATE MESH AND EXPORT #######
 # Generate mesh #
-mesh, mesh_DUST, coordinates_DUST, connectivity_DUST = generate_mesh(ALL_sections, n_blades, close_TE)
+mesh, connectivity, mesh_DUST, coordinates_DUST, connectivity_DUST = generate_mesh(ALL_sections, n_blades, close_TE)
 
 import meshio
 meshio.write(f'{output_dir}/12x6_mesh___span_{dist_spanwise}-sec_{dist_airfoil}{TE_property}.vtk', mesh, file_format='vtk')
 
 """###############  Export the point coordinates and their connectivity information (for Basic Mesh in DUST)   ##################"""
-DUST_dir = f'{output_dir}/DUST_input___span_{dist_spanwise}-sec_{dist_airfoil}{TE_property}'
+DUST_dir = f'{output_dir}/DUST_input___{len(ALL_sections)}_n_span-{ALL_sections[0].shape[0]}_n_sec{TE_property}'
 if os.path.isdir(DUST_dir) is False:
-    os.mkdir(DUST_dir)
+    os.mkdir(f'{DUST_dir}')
 
 meshio.write(f'{DUST_dir}/mesh_DUST.vtk', mesh_DUST, file_format='vtk')
 

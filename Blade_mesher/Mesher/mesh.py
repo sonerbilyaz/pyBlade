@@ -43,9 +43,9 @@ def generate_mesh(ALL_sections, n_blades, close_TE):
             p3_index = i+1                      # UR
             p4_index = i+1+(num_points-1)     # LR
             
-        cell_connect = np.array([[p1_index, p2_index, p3_index, p4_index]])
+        cell_connect = np.array([[p4_index, p3_index, p2_index, p1_index]])
         
-        cell_connect_DUST = np.array([[p1_index+1, p2_index+1, p3_index+1, p4_index+1]])
+        cell_connect_DUST = cell_connect + np.ones(cell_connect.shape)
         
         if i == 0:
             connectivity = cell_connect
@@ -100,4 +100,4 @@ def generate_mesh(ALL_sections, n_blades, close_TE):
     cells = [('quad', combined_connectivity)]
     mesh= meshio.Mesh(combined_points, cells)
     
-    return mesh, mesh_DUST, combined_points_DUST, combined_connectivity_DUST
+    return mesh, combined_connectivity, mesh_DUST, combined_points_DUST, combined_connectivity_DUST
