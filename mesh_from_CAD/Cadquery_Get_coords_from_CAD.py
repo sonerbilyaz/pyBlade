@@ -6,8 +6,8 @@ start_time = timer()  # Start the timer
 
 import numpy as np, os, sys 
 
-# Get the absolute path to the parent directory and add it to the sys path for relative imports
-package_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+# Get the absolute path to the directory and add it to the sys path for relative imports
+package_dir = os.path.abspath(os.path.dirname(__file__))
 if package_dir not in sys.path:
     sys.path.append(package_dir)
 
@@ -21,7 +21,7 @@ working_dir = '../Test_Cases/12x6 ClarkY'
 stp_file = f'{working_dir}/12x6_ClarkY-1_Blade_LE_at_the_mid_face_little_modification.stp'
 
 ############################ Geometry Parameters ##############################
-n_blades = 2        # Number of blades
+n_blades = 1        # Number of blades
 
 remove_TE = True            # Should we remove TE ??
 close_TE = True             # Should we close the TE gap ??
@@ -37,13 +37,12 @@ num_points = 19                         ## Upper and Lower surf separately!!
 dist_airfoil = 'cosine_LE'
 
 ### Spanwise Cutting Planes ###
-spanwise_panel_num= 52
+spanwise_panel_num= 60
 z_min, z_max = 24, 152                ## in mm
 
 dist_spanwise = 'cosine_TIP'
 r_R = 0.83                               ## Span location to start the cosine_TIP 
 """###############################################################################"""
-
 if close_TE is True:
     TE_property = ''
 else:

@@ -1,6 +1,6 @@
 import meshio
 import numpy as np
-from mesh_from_CAD.Geometry_operations.Rotation import Rotate
+from Geometry_operations.Rotation import Rotate
 
 def generate_mesh(ALL_sections, n_blades, close_TE):
     
@@ -91,7 +91,7 @@ def generate_mesh(ALL_sections, n_blades, close_TE):
     """ ##############         CREATE MESH FOR EACH BLADE      #############"""
     # Generate the DUST mesh #
     combined_points_DUST = Rotate(combined_points, -90, axis='x')
-    combined_points_DUST = Rotate(combined_points_DUST, 90, axis='z')
+    combined_points_DUST = Rotate(combined_points_DUST, -90, axis='z')
     
     cells = [('quad', combined_connectivity)]
     mesh_DUST= meshio.Mesh(combined_points_DUST, cells)

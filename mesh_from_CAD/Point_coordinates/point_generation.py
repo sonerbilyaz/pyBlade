@@ -1,10 +1,10 @@
 import cadquery as cq
 import numpy as np
 
-from mesh_from_CAD.Distributions.distributions import airfoil_distribution
+from Distributions.distributions import airfoil_distribution
 
-from mesh_from_CAD.Geometry_operations import modify as modify
-from mesh_from_CAD.Geometry_operations import extract_info as identify
+from Geometry_operations import modify as modify
+from Geometry_operations import extract_info as identify
 
 ## Get coordinates ##
 def get_coords(stp_file, num_points, dist_airfoil, z_planes, remove_TE, close_TE):    
