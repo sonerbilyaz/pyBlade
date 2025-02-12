@@ -33,7 +33,7 @@ rotation_axis = [0, -1, 0]
 
 ############################ Panel Parameters #################################
 ### Airfoil Section ###
-num_points = 25                         ## Upper and Lower surf separately!!
+num_points = 22                         ## Upper and Lower surf separately!!
 dist_airfoil = 'cosine_LE'
 
 ### Spanwise Cutting Planes ###
@@ -58,11 +58,11 @@ if os.path.isdir(output_dir) is False:
 z_planes = spanwise_planes(z_min, z_max, spanwise_panel_num, dist_spanwise, r_R)
 
 ###### GENERATE POINTS ######
-ALL_sections, all_sections_compound = points.get_coords(stp_file, num_points, dist_airfoil, z_planes, remove_TE, close_TE)
+ALL_sections, ALL_sections_DUST, all_sections_compound = points.get_coords(stp_file, num_points, dist_airfoil, z_planes, remove_TE, close_TE)
     
 ###### GENERATE MESH AND EXPORT #######
 # Generate mesh #
-mesh, connectivity, mesh_DUST, coordinates_DUST, connectivity_DUST = generate_mesh(ALL_sections, n_blades, close_TE)
+mesh, connectivity, mesh_DUST, connectivity_DUST, coordinates_DUST = generate_mesh(ALL_sections, ALL_sections_DUST, n_blades, close_TE)
 
 import meshio
 meshio.write(f'{output_dir}/12x6_mesh___span_{dist_spanwise}-sec_{dist_airfoil}{TE_property}.vtk', mesh, file_format='vtk')
@@ -77,6 +77,8 @@ meshio.write(f'{DUST_dir}/mesh_DUST.vtk', mesh_DUST, file_format='vtk')
 with open(f'{DUST_dir}/rr.dat', 'w') as file:
     np.savetxt(file, coordinates_DUST, delimiter='\t', fmt=['%.8f','%.8f','%.8f'], comments='')
 
+## Export the DUST connectivity by switching from python index to dust index
+connectivity_DUST = connectivity_DUST + np.ones(connectivity_DUST.shape)
 with open(f'{DUST_dir}/ee.dat', 'w') as file:
     np.savetxt(file, connectivity_DUST, delimiter='\t', fmt=['%.0f','%.0f','%.0f','%.0f'], comments='')
 """##############################################################################################################################"""    

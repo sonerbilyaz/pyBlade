@@ -33,8 +33,7 @@ def remove_TE(edge_objects):
     
     return filtered_edges, TE_upper, TE_lower
 
-def close_TE_gap(points, Node_IDs_upper_surface, n):
-    
+def close_TE_gap(points, Node_IDs_upper_surface, n):    
     ##################  Get the information from the section ##################
     num_points = points.shape[0]
     # First point in the sectional points is "TE_upper", and the last one is "TE_lower"
@@ -107,6 +106,6 @@ def close_TE_gap(points, Node_IDs_upper_surface, n):
     """ Move to Original position """
     points_new_scaled_rotated[:,1:] = points_new_scaled_rotated[:,1:] + LE_coordinates_shaped
     
-    points_new = points_new_scaled_rotated 
-    
+    ## Make sure that the upper TE node and lower TE node are the same (1st and last point will be the same, coincides on top of each other)
+    points_new = points_new_scaled_rotated.copy() 
     return points_new

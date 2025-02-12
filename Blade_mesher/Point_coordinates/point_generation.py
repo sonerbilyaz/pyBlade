@@ -18,6 +18,7 @@ def get_coords(stp_file, num_points, dist_airfoil, z_planes, remove_TE, close_TE
     ALL_sections = []
     ALL_cross_sections = []
     
+    ALL_sections_DUST = []
     for z in z_planes:
         # Create a section of the blade using the defined z-coord
         cross_section=blade.section(height=z)
@@ -82,21 +83,30 @@ def get_coords(stp_file, num_points, dist_airfoil, z_planes, remove_TE, close_TE
         sorted_indices = np.argsort(data[:,0])
         data = data[sorted_indices]
         
+        data_DUST = data.copy()
         # Check for closing the TE[:,1:]*1e-03
         if close_TE is True:
             data = modify.close_TE_gap(data, Node_ID_one_surf, n=10)
-            # After closing the TE, remove extra TE point, which is the last element
-            data = np.delete(data, -1, axis=0)
-        
+            ## Coordinates will be different for DUST basic mesh, since zero TE gap is not allowed !!
+            data_DUST = data.copy()
+            ## Remove the last duplicate point in DUST
+            data_DUST = data_DUST[0:-1,:]
+            # After closing the TE, make sure that upper TE node and lower TE node will be the same for the NVLM solver (1st and last point)
+            data[-1,1:] = data[0,1:]
+            
+            
         # Convert from mm to meter
         data[:,1:] = data[:,1:]*1e-03
+        data_DUST[:,1:] = data_DUST[:,1:]*1e-03
         
         ### Append ALL data ###
         ALL_sections.append(data)
+        ALL_sections_DUST.append(data_DUST)
+        
         # Cross sections append (Optional)
         ALL_cross_sections.append(cross_section.val())    
         
     ## Export all cross sections as a step file (Optional)
     all_sections_compound = cq.Compound.makeCompound(ALL_cross_sections)      
     
-    return ALL_sections, all_sections_compound
+    return ALL_sections, ALL_sections_DUST, all_sections_compound
