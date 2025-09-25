@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-REQUIREMENTS = ["cadquery", "numpy==1.24.4", "nlopt==2.7.1", "spyder", "spyder-kernels==2.5.*", "meshio"]
+REQUIREMENTS = ["cadquery", "numpy==1.24.4", "nlopt==2.7.1", "meshio"]
 
 setup(
       name="Blade_mesher",
@@ -26,7 +26,7 @@ setup(
     },
       entry_points={
         "console_scripts": [
-            "mesh=Cadquery_Get_coords_from_CAD",      # Define a console command to mesh the step file
+            "mesh=mesh",      # Define a console command to mesh the step file
         ],
       }
       

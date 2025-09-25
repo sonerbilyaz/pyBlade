@@ -4,82 +4,82 @@ from Geometry_operations.Rotation import Rotate
 
 def generate_mesh(ALL_sections, ALL_sections_DUST,  n_blades, close_TE):
     
-    """ ELEMENT ORDER: Start from lower left and go clockwise (Top view looking to suction surface)
+    """ CCW ORDER: Start from lower left and go clockwise 
+    (Looking from + to - surface normal !!)
     
-    UL    UR              LL (lower left), numpy array (3,)
-    o --- o               UL (upper left), numpy array (3,)
-    \     \               UR (upper right), numpy array (3,)
-    o --- o               LR (lower right), numpy array (3,)
-    LL    LR
+    1     4               1 (upper left), numpy array (3,)
+    o --- o               2 (lower left), numpy array (3,)
+    |     |               3 (lower right), numpy array (3,)
+    o --- o               4 (upper right), numpy array (3,)
+    2     3
     
     """
-    
-    num_points = len(ALL_sections[0])
-    num_points_DUST = len(ALL_sections_DUST[0])
-    
-    ## Reconstruct the coordinates array such that every span vertically concetaneted after the last one
-    count = 0
-    for section, section_DUST in zip(ALL_sections, ALL_sections_DUST):
-        count = count + 1
-        
-        if count == 1:
-            ALL_sections_one_array = section
-            ALL_sections_one_array_DUST = section_DUST
-        else:
-            ALL_sections_one_array = np.vstack((ALL_sections_one_array, section))
-            ALL_sections_one_array_DUST = np.vstack((ALL_sections_one_array_DUST, section_DUST))
-        
-    #####   Build the connectivity array contains the point IDs. shape = (cell_no ,4)     ######
-    for i,j in zip(range(len(ALL_sections_one_array)-num_points),range(len(ALL_sections_one_array_DUST)-num_points_DUST)):        
-        ###### ---- NVLM Build the connectivity array ---- #######
-        p1_index = i                                # LL
-        p2_index = i+1                              # UL
-        p3_index = i+1+num_points                   # UR
-        p4_index = i+num_points                     # LR
-        
-        ###### ---- DUST Build the connectivity array ---- #######
-        ID = j+1
-        # Connectivity will not change for the intermediate points
-        if close_TE is False or ID%num_points_DUST!=0:
-            p1_index_DUST = j                       # LL
-            p2_index_DUST = j+1                     # UL
-            p3_index_DUST = j+1+num_points_DUST     # UR
-            p4_index_DUST = j+num_points_DUST       # LR
-        
-        # Connectivity will be different for the last TE point !!!!!! 
-        if close_TE is True and ID%num_points_DUST==0:
-            p1_index_DUST = j                      # LL
-            p2_index_DUST = j-(num_points_DUST-1)       # UL
-            p3_index_DUST = j+1                    # UR
-            p4_index_DUST = j+1+(num_points_DUST-1)     # LR
+    n_span = len(ALL_sections)
+    n_chord = ALL_sections[0].shape[0]
+    n_chord_DUST = ALL_sections_DUST[0].shape[0]
 
-        
-        cell_connect = np.array([[p4_index, p3_index, p2_index, p1_index]])
-        cell_connect_DUST = np.array([[p4_index_DUST, p3_index_DUST, p2_index_DUST, p1_index_DUST]])
-        
-        if i == 0:
-            connectivity = cell_connect
-        if i != 0:
-            connectivity = np.vstack((connectivity, cell_connect))
+    blade = np.concatenate([section for section in ALL_sections], axis = 0)
+    blade_DUST = np.concatenate([section for section in ALL_sections_DUST], axis = 0)
+
+    ## (n_span, n_chord, 4) ==> 1st col Node ID
+    blade_grid = blade.reshape((n_span, n_chord, 4))
+    blade_DUST_grid = blade_DUST.reshape((n_span, n_chord_DUST, 4))
+
+    connectivity = []
+    connectivity_DUST = []
+
+    for k in range(n_span-1):
+        for i, i_DUST in zip(range(n_chord-1), range(n_chord_DUST)):
             
-        if j == 0:
-            connectivity_DUST = cell_connect_DUST
-        if j != 0:
-            connectivity_DUST = np.vstack((connectivity_DUST, cell_connect_DUST))
+            ### ----------------------------    NVLM    ---------------------------- #####
+            ## These indices will be the row rumbers of the point in blade array ==> (N,4) 
+            ## Return the row number of the element in "blade" where the required one in "blade_grid" equals
+            p1_index = np.flatnonzero((blade == blade_grid[k,i]).all(1))[0]         ## UL (1)   
+            p2_index = np.flatnonzero((blade == blade_grid[k,i+1]).all(1))[0]       ## LL (2)
+            p3_index = np.flatnonzero((blade == blade_grid[k+1,i+1]).all(1))[0]     ## LR (3)
+            p4_index = np.flatnonzero((blade == blade_grid[k+1,i]).all(1))[0]       ## UR (4)
+
+            ### ----------------------------    DUST    ---------------------------- #####
+            ## If we close the TE in DUST, LAST POINT SHOULD NOT BE REPEATED !!!
+            ## (For the last element in each span, connectivity will be linked to 1st element)
+
+            # Connectivity will not change for the intermediate points
+            if close_TE is False or (i_DUST+1)%n_chord_DUST!=0:
+
+                p1_index_DUST = np.flatnonzero((blade_DUST == blade_DUST_grid[k,i_DUST]).all(1))[0]         ## UL (1)   
+                p2_index_DUST = np.flatnonzero((blade_DUST == blade_DUST_grid[k,i_DUST+1]).all(1))[0]       ## LL (2)
+                p3_index_DUST = np.flatnonzero((blade_DUST == blade_DUST_grid[k+1,i_DUST+1]).all(1))[0]     ## LR (3)
+                p4_index_DUST = np.flatnonzero((blade_DUST == blade_DUST_grid[k+1,i_DUST]).all(1))[0]       ## UR (4)
+
+            # Connectivity will be different for the last TE point !!!!!! 
+            else:
+                p1_index_DUST = np.flatnonzero((blade_DUST == blade_DUST_grid[k,i_DUST]).all(1))[0]      ## UL (1)   
+                p2_index_DUST = np.flatnonzero((blade_DUST == blade_DUST_grid[k,0]).all(1))[0]    ## LL (2)
+                p3_index_DUST = np.flatnonzero((blade_DUST == blade_DUST_grid[k+1,0]).all(1))[0]         ## LR (3)
+                p4_index_DUST = np.flatnonzero((blade_DUST == blade_DUST_grid[k+1,i_DUST]).all(1))[0]           ## UR (4)
+        
+            cell_connect = np.array([[p1_index, p2_index, p3_index, p4_index]])
+            cell_connect_DUST = np.array([[p1_index_DUST, p2_index_DUST, p3_index_DUST, p4_index_DUST]])
+        
+            connectivity.append(cell_connect)
+            connectivity_DUST.append(cell_connect_DUST)
             
-    cell_points = ALL_sections_one_array[:,1:]
-    cell_points_DUST = ALL_sections_one_array_DUST[:,1:]
+    points = blade[:,1:]
+    points_DUST = blade_DUST[:,1:]
+    
+    connectivity = np.concatenate([cell for cell in connectivity], axis=0)
+    connectivity_DUST = np.concatenate([cell for cell in connectivity_DUST], axis=0)
     
     """ ##############         CREATE MESH       #############"""
     # Generate the DUST mesh #
-    cell_points_DUST = Rotate(cell_points_DUST, -90, axis='x')
-    cell_points_DUST = Rotate(cell_points_DUST, -90, axis='z')
+    points_DUST = Rotate(points_DUST, -90, axis='x')
+    points_DUST = Rotate(points_DUST, -90, axis='z')
     
     cells = [('quad', connectivity_DUST)]
-    mesh_DUST= meshio.Mesh(cell_points_DUST, cells)
+    mesh_DUST= meshio.Mesh(points_DUST, cells)
     
-    # Generate the overall mesh #
+    # Generate the NVLM mesh for inspection #
     cells = [('quad', connectivity)]
-    mesh= meshio.Mesh(cell_points, cells)
+    mesh= meshio.Mesh(points, cells)
     
-    return mesh, connectivity, mesh_DUST, connectivity_DUST, cell_points_DUST
+    return mesh, mesh_DUST, connectivity_DUST, points_DUST

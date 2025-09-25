@@ -1,0 +1,2 @@
+[console_scripts]
+mesh = Cadquery_Get_coords_from_CAD
