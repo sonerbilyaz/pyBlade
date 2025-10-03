@@ -1,38 +1,33 @@
 import numpy as np
+from . import extract_info
 
 def remove_TE(edge_objects):
-    # Get the midpoints of the edges
-    count = 0
-    for edge in edge_objects:
-        count = count+1
-        midpoint=np.array(edge.positionAt(0.5).toTuple())
-        if count == 1:
-            edges_midpoints = midpoint.reshape(1,3)
-        if count != 1:
-            edges_midpoints = np.vstack((edges_midpoints, midpoint))
-            
-    ## Select the TE whose midpoint has the highest x-coordinate ##
-    TE_id = np.argmax(edges_midpoints[:,0])
-    TE = edge_objects[TE_id]
-    ## Get the TE coordinates
-    p1=TE.positionAt(0).toTuple()                   ## Point coords at one vertex
-    p2=TE.positionAt(1).toTuple()                   ## Point coords at the other vertex
-    
-    ## Amont TE coordinates, y-coordinate of the upper TE should be lower than the midpoint y-coordinate
-    ## of the TE 
-    if p2[1] < p1[1]:
-        TE_upper = np.array(p2)
-        TE_lower = np.array(p1)
+    """
+    Removes the TE edge object from all of the edges
         
-    if p1[1] < p2[1]:
-        TE_upper = np.array(p1)
-        TE_lower = np.array(p2)
-        
-    del edge_objects[TE_id]
+        Parameters
+        ----------
+        edge_objects : List
+            All edge objects of a section (includes TE)
+
+        Returns
+        -------
+        filtered_edges: List
+            All edge objects of a section (WITHOUT TE!!)
+    """
+
+    ## Get the TE
+    TE, _, _ = extract_info.get_TE(edge_objects)
+
+    ## Remove the TE from the edges
+    for i, edge in enumerate(edge_objects):
+        if edge == TE:
+            del edge_objects[i]
+
     filtered_edges = edge_objects
     
-    return filtered_edges, TE_upper, TE_lower
-
+    return filtered_edges
+    
 def close_TE_gap(points, Node_IDs_upper_surface, n):    
     ##################  Get the information from the section ##################
     num_points = points.shape[0]

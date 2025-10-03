@@ -14,48 +14,45 @@ from Mesher.mesh import generate_mesh
 
 """################################ INPUTS #######################################"""
 # File paths and the STEP file
-working_dir = '../Output/12x6 ClarkY'
-stp_file = f'{working_dir}/12x6_ClarkY-1_Blade_LE_at_the_mid_face_little_modification.stp'
+working_dir = '../Runs/VX4_Front_Prop'
+stp_file = f'{working_dir}/VX4_Front_Blade_single.stp'
 
-############################ Geometry Parameters ##############################
-n_blades = 2        # Number of blades
+output_dir = f'{working_dir}/output'
+###############     Panel Parameters     ###############
+### Chordwise Distribution ###
+N_chord = 22                    ## Upper and Lower surf separately!!
+dist_airfoil = 'cosine_LE'
 
+### Spanwise Distribution ###
+N_span= 50
+z_min, z_max = 27, 150          ## in mm
+
+dist_spanwise = 'cosine_TIP'
+r_R = 0.85                      ## Span location to start the cosine_TIP 
+
+### TE Modification ###
 remove_TE = True            # Should we remove TE ??
 close_TE = True             # Should we close the TE gap ??
 
-######### .pmt Inputs #########
+#########################################################
+
+### .pts Inputs ###
+n_blades = 5        # Number of blades
 surf_type = 'propeller'     # Surface type (wing/propeller)
 rotation_center = [0, 0, 0]
 rotation_axis = [0, -1, 0]
 
-############################ Panel Parameters #################################
-### Airfoil Section ###
-num_points = 22                         ## Upper and Lower surf separately!!
-dist_airfoil = 'cosine_LE'
-
-### Spanwise Cutting Planes ###
-spanwise_panel_num= 50
-z_min, z_max = 24, 152                ## in mm
-
-dist_spanwise = 'cosine_TIP'
-r_R = 0.85                               ## Span location to start the cosine_TIP 
 """###############################################################################"""
-if close_TE is True:
-    TE_property = ''
-else:
-    TE_property='-OPEN_TE'    
-################################
 
-output_dir = f'{working_dir}/output'
-# Create output directory if there is no #
+# Create output directory if it is absent #
 if os.path.isdir(output_dir) is False:
     os.mkdir(output_dir)
 
 ### Create spanwise planes ###
-z_planes = spanwise_planes(z_min, z_max, spanwise_panel_num, dist_spanwise, r_R)
+z_planes = spanwise_planes(z_min, z_max, N_span, dist_spanwise, r_R)
 
 ###### GENERATE POINTS ######
-ALL_sections, ALL_sections_DUST, all_sections_compound = points.get_coords(stp_file, num_points, dist_airfoil, z_planes, remove_TE, close_TE)
+ALL_sections, ALL_sections_DUST, all_sections_compound = points.get_coords(stp_file, N_chord, dist_airfoil, z_planes, remove_TE, close_TE)
     
 ###### GENERATE MESH AND EXPORT #######
 # Generate mesh #

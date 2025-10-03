@@ -1,10 +1,10 @@
-import cadquery as cq
+import cadquery as cq # type: ignore
 import numpy as np
 
 from Distributions.distributions import airfoil_distribution
 
-from Geometry_operations import modify as modify
-from Geometry_operations import extract_info as identify
+from Geometry_operations import modify
+from Geometry_operations import extract_info 
 
 ## Get coordinates ##
 def get_coords(stp_file, num_points, dist_airfoil, z_planes, remove_TE, close_TE):    
@@ -27,16 +27,15 @@ def get_coords(stp_file, num_points, dist_airfoil, z_planes, remove_TE, close_TE
         # Access the edge objects from the Workplane
         edge_objects = edges.objects
         
+        ## Get the edges around the TE 
+        _, TE_upper_edge, TE_lower_edge = extract_info.get_TE(edge_objects)
+
         # Should we remove TE ??
         if remove_TE is True:
-            filtered_edges, TE_upper, TE_lower = modify.remove_TE(edge_objects)
-        
-        if remove_TE is False:
-            _, TE_upper, TE_lower  = modify.remove_TE(edge_objects)
-            filtered_edges = edge_objects
-        
-        # Identify the edges
-        upper_surface, lower_surface, LE_coords = identify.extract_edges(filtered_edges, TE_upper, TE_lower)
+            edge_objects = modify.remove_TE(edge_objects)
+
+        ### Get the Upper and Lower Surfaces Seperately
+        upper_surface, lower_surface, LE_coords = extract_info.extract_edges_open_TE(edge_objects, TE_upper_edge, TE_lower_edge)
         
         ## Assign the parametric points between 0 and 1 to the upper and lower surfaces
         parametric_points_up = parametric_points 
@@ -45,17 +44,19 @@ def get_coords(stp_file, num_points, dist_airfoil, z_planes, remove_TE, close_TE
         parametric_points_low = parametric_points
         Node_ID_low = np.linspace(len(Node_ID_up)+1, 2*len(Node_ID_up)-1, len(Node_ID_up)-1)
         
-        # Check it starts generating points from the starting vertex (LE)
-        if np.array_equal(np.round(upper_surface.positionAt(0).toTuple(),decimals=2).reshape(1,3), np.round(LE_coords,decimals=2)) is False and dist_airfoil == 'cosine_LE':
-            # If the orientation is wrong, reverse it to correct ==> !! ONLY REQUIRED FOR COSINE_LE DISTRIBUTION !!
+        # Make sure it generates points starting from LE vertex  ==> !! ONLY REQUIRED FOR COSINE_LE DISTRIBUTION !!
+        ## If the x-coord of the vertex is bigger than the other edge, reverse the order 
+        reverse_upper_surf = upper_surface.positionAt(0).toTuple()[0] > upper_surface.positionAt(1).toTuple()[0]
+        reverse_lower_surf = lower_surface.positionAt(0).toTuple()[0] > lower_surface.positionAt(1).toTuple()[0]
+
+        if reverse_upper_surf and dist_airfoil == 'cosine_LE':
             parametric_points_up = 1 - parametric_points_up
-            # 
+            
             # print(f'upper surface parametric is reversed at z={z}mm. LE = {upper_surface.positionAt(parametric_points_up[0]).toTuple()}')
             
-        if np.array_equal(np.round(lower_surface.positionAt(0).toTuple(),decimals=2).reshape(1,3), np.round(LE_coords,decimals=2)) is False and dist_airfoil == 'cosine_LE':
-            # If the orientation is wrong, reverse it to correct ==> !! ONLY REQUIRED FOR COSINE_LE DISTRIBUTION !!
+        if reverse_lower_surf and dist_airfoil == 'cosine_LE':
             parametric_points_low = 1- parametric_points_low
-            # 
+            
             # print(f'lower surface parametric is reversed at z={z}mm LE = {lower_surface.positionAt(parametric_points_low[0]).toTuple()}')
             
         # Generate interpolated points along the upper and lower surfaces
@@ -95,9 +96,9 @@ def get_coords(stp_file, num_points, dist_airfoil, z_planes, remove_TE, close_TE
             data[-1,1:] = data[0,1:]
             
             
-        # Convert from mm to meter
-        data[:,1:] = data[:,1:]*1e-03
-        data_DUST[:,1:] = data_DUST[:,1:]*1e-03
+        # # Convert from mm to meter
+        # data[:,1:] = data[:,1:]*1e-03
+        # data_DUST[:,1:] = data_DUST[:,1:]*1e-03
         
         ### Append ALL data ###
         ## Sectional points should go from lower to upper TE !!!
