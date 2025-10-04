@@ -18,13 +18,14 @@ working_dir = '../Runs/VX4_Front_Prop'
 stp_file = f'{working_dir}/VX4_Front_Blade_single.stp'
 
 output_dir = f'{working_dir}/output'
+pts_filename = 'VX4_front_prop'
 ###############     Panel Parameters     ###############
 ### Chordwise Distribution ###
-N_chord = 22                    ## Upper and Lower surf separately!!
+N_chord = 23                    ## Upper and Lower surf separately!!
 dist_airfoil = 'cosine_LE'
 
 ### Spanwise Distribution ###
-N_span= 50
+N_span= 52
 z_min, z_max = 27, 150          ## in mm
 
 dist_spanwise = 'cosine_TIP'
@@ -34,6 +35,8 @@ r_R = 0.85                      ## Span location to start the cosine_TIP
 remove_TE = True            # Should we remove TE ??
 close_TE = True             # Should we close the TE gap ??
 
+### Pitch Modification (deg) ###
+pitch_increment = 14     
 #########################################################
 
 ### .pts Inputs ###
@@ -43,7 +46,7 @@ rotation_center = [0, 0, 0]
 rotation_axis = [0, -1, 0]
 
 """###############################################################################"""
-
+pts_filename = pts_filename if pitch_increment == 0 else f'{pts_filename}_pitch_{pitch_increment}'
 # Create output directory if it is absent #
 if os.path.isdir(output_dir) is False:
     os.mkdir(output_dir)
@@ -52,17 +55,16 @@ if os.path.isdir(output_dir) is False:
 z_planes = spanwise_planes(z_min, z_max, N_span, dist_spanwise, r_R)
 
 ###### GENERATE POINTS ######
-ALL_sections, ALL_sections_DUST, all_sections_compound = points.get_coords(stp_file, N_chord, dist_airfoil, z_planes, remove_TE, close_TE)
+ALL_sections, ALL_sections_DUST, all_sections_compound = points.get_coords(stp_file, N_chord, dist_airfoil, z_planes, close_TE, pitch_increment)
     
 ###### GENERATE MESH AND EXPORT #######
-# Generate mesh #
 mesh, mesh_DUST, connectivity_DUST, coordinates_DUST = generate_mesh(ALL_sections, ALL_sections_DUST, n_blades, close_TE)
 
 import meshio
-meshio.write(f'{output_dir}/12x6_mesh.vtk', mesh, file_format='vtk')
+meshio.write(f'{output_dir}/{pts_filename}.vtk', mesh, file_format='vtk')
 
 """####################  DUST EXPORT (for Basic Mesh)   ###########################"""
-DUST_dir = f'{working_dir}/DUST_output'
+DUST_dir = f'{working_dir}/DUST_output' if pitch_increment == 0 else f'{working_dir}/DUST_output_pitch_{pitch_increment}'
 if os.path.isdir(DUST_dir) is False:
     os.mkdir(f'{DUST_dir}')
 
@@ -78,7 +80,7 @@ with open(f'{DUST_dir}/ee.dat', 'w') as file:
 """#################################################################################"""    
 
 ##################################   NVLM EXPORT     ##################################
-with open(f'{output_dir}/12x6_Blade.pts', 'w') as file:
+with open(f'{output_dir}/{pts_filename}.pts', 'w') as file:
     file.write('######## Panel parameters ########\n')
     file.write(f'type={surf_type}\n')
     file.write(f'n_blades={n_blades}\n\n')

@@ -104,3 +104,14 @@ def close_TE_gap(points, Node_IDs_upper_surface, n):
     ## Make sure that the upper TE node and lower TE node are the same (1st and last point will be the same, coincides on top of each other)
     points_new = points_new_scaled_rotated.copy() 
     return points_new
+
+def pitch_increase(points, pitch_increment):
+    # 2D Rotation matrix for -z axis rotation
+    Rz_neg = np.array([
+        [np.cos(np.radians(-pitch_increment)), np.sin(np.radians(-pitch_increment))],
+        [-np.sin(np.radians(-pitch_increment)),  np.cos(np.radians(-pitch_increment))]
+    ])
+
+    points[:,:2] = points[:,:2] @ Rz_neg.T
+
+    return points

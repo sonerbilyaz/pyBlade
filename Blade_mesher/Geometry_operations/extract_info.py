@@ -1,6 +1,7 @@
-import cadquery as cq
+import cadquery as cq # type: ignore
 
 import numpy as np
+from . import modify
 
 def get_TE(edge_objects):
     """
@@ -50,20 +51,14 @@ def get_TE(edge_objects):
 
     return TE, TE_upper_edge, TE_lower_edge
 
-def extract_edges_open_TE(edges, TE_upper_edge, TE_lower_edge):
+def extract_surfaces(edges):
     """
         Extracts the upper and lower surfaces, seperately 
         
         Parameters
         ----------
         edges : List
-            All edge objects of a section (WITHOUT TE!!)
-
-        TE_upper_edge   : Edge object
-            The edge at the upper surface adjacent to the TE 
-
-        TE_lower_edge   : Edge object
-            The edge at the lower surface adjacent to the TE 
+            All edge objects of a section (Including TE)
             
         Returns
         -------
@@ -73,10 +68,14 @@ def extract_edges_open_TE(edges, TE_upper_edge, TE_lower_edge):
         upper_surface   : Wire object
             Upper surface as a single wire object
         
-        LE              : array(3,)
-            LE vertex coordinates
     """
     
+    ## First, get the edges adjacent to the TE at the upper&lower surfaces 
+    _, TE_upper_edge, TE_lower_edge = get_TE(edges)
+
+    # Then, remove TE from the edges to begin the work
+    edges = modify.remove_TE(edges)
+
     ### Find the LE vertex ###
     vertices = [np.array(v.toTuple()) for edge in edges for v in edge.vertices()]
     vertices = np.asarray(vertices)
@@ -113,6 +112,6 @@ def extract_edges_open_TE(edges, TE_upper_edge, TE_lower_edge):
                 lower_surface = cq.Wire.assembleEdges(sorted_edges[i+1:])
                 break
                         
-    return upper_surface, lower_surface, LE
+    return upper_surface, lower_surface
     
     

@@ -7,10 +7,10 @@ from Geometry_operations import modify
 from Geometry_operations import extract_info 
 
 ## Get coordinates ##
-def get_coords(stp_file, num_points, dist_airfoil, z_planes, remove_TE, close_TE):    
+def get_coords(stp_file, N_chord, dist_airfoil, z_planes, close_TE, pitch_increment):    
     
     ### Generate parametric points for airfoil section ###
-    parametric_points, Node_ID_one_surf = airfoil_distribution(num_points, dist_airfoil)
+    parametric_points, Node_ID_one_surf = airfoil_distribution(N_chord, dist_airfoil)
     
     # Load the .stp file
     blade = cq.importers.importStep(stp_file)
@@ -27,15 +27,8 @@ def get_coords(stp_file, num_points, dist_airfoil, z_planes, remove_TE, close_TE
         # Access the edge objects from the Workplane
         edge_objects = edges.objects
         
-        ## Get the edges around the TE 
-        _, TE_upper_edge, TE_lower_edge = extract_info.get_TE(edge_objects)
-
-        # Should we remove TE ??
-        if remove_TE is True:
-            edge_objects = modify.remove_TE(edge_objects)
-
-        ### Get the Upper and Lower Surfaces Seperately
-        upper_surface, lower_surface, LE_coords = extract_info.extract_edges_open_TE(edge_objects, TE_upper_edge, TE_lower_edge)
+        ### Extract the Upper and Lower Surfaces Seperately
+        upper_surface, lower_surface = extract_info.extract_surfaces(edge_objects)
         
         ## Assign the parametric points between 0 and 1 to the upper and lower surfaces
         parametric_points_up = parametric_points 
@@ -52,28 +45,17 @@ def get_coords(stp_file, num_points, dist_airfoil, z_planes, remove_TE, close_TE
         if reverse_upper_surf and dist_airfoil == 'cosine_LE':
             parametric_points_up = 1 - parametric_points_up
             
-            # print(f'upper surface parametric is reversed at z={z}mm. LE = {upper_surface.positionAt(parametric_points_up[0]).toTuple()}')
-            
         if reverse_lower_surf and dist_airfoil == 'cosine_LE':
             parametric_points_low = 1- parametric_points_low
             
-            # print(f'lower surface parametric is reversed at z={z}mm LE = {lower_surface.positionAt(parametric_points_low[0]).toTuple()}')
-            
         # Generate interpolated points along the upper and lower surfaces
-        upper_points, lower_points = [], []
-        for t in parametric_points_up:
-            # Place points on each edge using normalized parameter t
-            upper_point  = upper_surface.positionAt(t).toTuple()
-            upper_points.append(upper_point)
-                
-        for k in parametric_points_low:
-            lower_point  = lower_surface.positionAt(k).toTuple()
-            lower_points.append(lower_point)
-            
-        # Create coords
-        upper_points = np.array(upper_points)
-        lower_points = np.array(lower_points)
+        upper_points = np.asarray([np.array(upper_surface.positionAt(t).toTuple()) for t in parametric_points_up])
+        lower_points = np.asarray([np.array(lower_surface.positionAt(t).toTuple()) for t in parametric_points_low])
         
+        ## Increase pitch, if there are any ###
+        upper_points = modify.pitch_increase(upper_points, pitch_increment)
+        lower_points = modify.pitch_increase(lower_points, pitch_increment)
+
         # Insert Node ID  (From upper TE to lower TE)
         data_up  = np.insert(upper_points[:,:], 0, Node_ID_up, axis=1)    
         data_low = np.insert(lower_points[1:,:], 0, Node_ID_low,axis=1)
@@ -88,17 +70,16 @@ def get_coords(stp_file, num_points, dist_airfoil, z_planes, remove_TE, close_TE
         # Check for closing the TE[:,1:]*1e-03
         if close_TE is True:
             data = modify.close_TE_gap(data, Node_ID_one_surf, n=10)
-            ## Coordinates will be different for DUST basic mesh, since zero TE gap is not allowed !!
-            data_DUST = data.copy()
-            ## Remove the last duplicate point in DUST
-            data_DUST = data_DUST[1:,:]
-            # After closing the TE, make sure that upper TE node and lower TE node will be the same for the NVLM solver (1st and last point)
+            ## Coordinates will be different for DUST basic mesh !! 
+            # Last repeated point at the TE should be removed 
+            data_DUST = data[1:,:].copy()
+            # After closing the TE, make sure that upper TE node and lower TE point is the same for the NVLM solver (1st and last point)
             data[-1,1:] = data[0,1:]
             
             
-        # # Convert from mm to meter
-        # data[:,1:] = data[:,1:]*1e-03
-        # data_DUST[:,1:] = data_DUST[:,1:]*1e-03
+        # Convert from mm to meter
+        data[:,1:] = data[:,1:]*1e-03
+        data_DUST[:,1:] = data_DUST[:,1:]*1e-03
         
         ### Append ALL data ###
         ## Sectional points should go from lower to upper TE !!!
