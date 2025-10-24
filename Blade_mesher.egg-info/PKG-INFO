@@ -11,10 +11,8 @@ Classifier: Operating System :: OS Independent
 Requires-Python: >=3.10
 License-File: LICENSE
 Requires-Dist: cadquery
-Requires-Dist: numpy==1.24.4
-Requires-Dist: nlopt==2.7.1
-Requires-Dist: spyder
-Requires-Dist: spyder-kernels==2.5.*
+Requires-Dist: numpy==2.2.6
+Requires-Dist: nlopt==2.9.0
 Requires-Dist: meshio
 Dynamic: author
 Dynamic: author-email

@@ -1,6 +1,4 @@
 cadquery
-numpy==1.24.4
-nlopt==2.7.1
-spyder
-spyder-kernels==2.5.*
+numpy==2.2.6
+nlopt==2.9.0
 meshio

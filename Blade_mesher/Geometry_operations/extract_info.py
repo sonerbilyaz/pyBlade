@@ -51,7 +51,7 @@ def get_TE(edge_objects):
 
     return TE, TE_upper_edge, TE_lower_edge
 
-def extract_surfaces(edges):
+def extract_surfaces(edges, find_LE):
     """
         Extracts the upper and lower surfaces, seperately 
         
@@ -79,8 +79,34 @@ def extract_surfaces(edges):
     ### Find the LE vertex ###
     vertices = [np.array(v.toTuple()) for edge in edges for v in edge.vertices()]
     vertices = np.asarray(vertices)
-    ## Lowest x-coordinate should be LE vertex
-    LE = vertices[np.argmin(vertices[:,0])]
+    
+    if find_LE:
+        ## SPLIT THE FACE INTO 2 WHICH CONTAINS LE VERTEX 
+
+        ## Get the edge midpoints (lowest x-coord of the midpoint will belong the the LE edge)
+        midpoints = np.concatenate([np.array([edge.positionAt(0.5).toTuple()]) for edge in edges], axis=0)
+        LE = midpoints[np.argmin(midpoints[:,0])]
+        ## Edge which contains LE
+        LE_edge = [edge for edge in edges if (np.array([edge.positionAt(0.5).toTuple()]) == LE).all()][0]    
+        
+        ## Split the LE_edge into 2 edges
+        umin, umax = LE_edge.bounds()
+        e1 = LE_edge.trim(umin, LE_edge.paramAt(0.5))    
+        e2 = LE_edge.trim(LE_edge.paramAt(0.5), umax)
+        
+        ## UPDATE THE "edges" LIST WHICH WILL HAVE SEPERATED LE
+        LE_edge_ind = edges.index(LE_edge)
+        
+        if e1.Vertices()[0].toTuple()[1] < e2.Vertices()[1].toTuple()[1]:
+
+            edges[LE_edge_ind:LE_edge_ind+1] = [e1,e2]
+        else:
+            edges[LE_edge_ind:LE_edge_ind+1] = [e2,e1]
+
+    else:
+        ## Lowest x-coordinate should be LE vertex
+        LE = vertices[np.argmin(vertices[:,0])]
+    
     
     for i, edge in enumerate(edges):
         if edge == TE_lower_edge:

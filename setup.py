@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-REQUIREMENTS = ["cadquery", "numpy==1.24.4", "nlopt==2.7.1", "meshio"]
+REQUIREMENTS = ["cadquery", "numpy==2.2.6", "nlopt==2.9.0", "meshio"]
 
 setup(
       name="Blade_mesher",

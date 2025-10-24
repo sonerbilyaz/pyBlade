@@ -14,33 +14,35 @@ from Mesher.mesh import generate_mesh
 
 """################################ INPUTS #######################################"""
 # File paths and the STEP file
-working_dir = '../Runs/VX4_Front_Prop'
-stp_file = f'{working_dir}/VX4_Front_Blade_single.stp'
+working_dir = '../Runs/12x6_ClarkY'
+stp_file = f'{working_dir}/12x6_ClarkY-1_Blade.stp'
 
 output_dir = f'{working_dir}/output'
-pts_filename = 'VX4_front_prop'
+pts_filename = '12x6_ClarkY'
+
+find_LE = True      ## Should we identify the LE ?? If so ==> True
 ###############     Panel Parameters     ###############
 ### Chordwise Distribution ###
 N_chord = 23                    ## Upper and Lower surf separately!!
 dist_airfoil = 'cosine_LE'
 
 ### Spanwise Distribution ###
-N_span= 52
-z_min, z_max = 27, 150          ## in mm
+N_span= 55
+z_min, z_max = 23.5, 151.5          ## in mm
 
 dist_spanwise = 'cosine_TIP'
-r_R = 0.85                      ## Span location to start the cosine_TIP 
+r_R = 0.82                      ## Span location to start the cosine_TIP 
 
 ### TE Modification ###
 remove_TE = True            # Should we remove TE ??
 close_TE = True             # Should we close the TE gap ??
 
 ### Pitch Modification (deg) ###
-pitch_increment = 14     
+pitch_increment = 0     
 #########################################################
 
 ### .pts Inputs ###
-n_blades = 5        # Number of blades
+n_blades = 1        # Number of blades
 surf_type = 'propeller'     # Surface type (wing/propeller)
 rotation_center = [0, 0, 0]
 rotation_axis = [0, -1, 0]
@@ -55,7 +57,7 @@ if os.path.isdir(output_dir) is False:
 z_planes = spanwise_planes(z_min, z_max, N_span, dist_spanwise, r_R)
 
 ###### GENERATE POINTS ######
-ALL_sections, ALL_sections_DUST, all_sections_compound = points.get_coords(stp_file, N_chord, dist_airfoil, z_planes, close_TE, pitch_increment)
+ALL_sections, ALL_sections_DUST, all_sections_compound = points.get_coords(stp_file, N_chord, dist_airfoil, z_planes, close_TE, pitch_increment, find_LE)
     
 ###### GENERATE MESH AND EXPORT #######
 mesh, mesh_DUST, connectivity_DUST, coordinates_DUST = generate_mesh(ALL_sections, ALL_sections_DUST, n_blades, close_TE)

@@ -7,7 +7,7 @@ from Geometry_operations import modify
 from Geometry_operations import extract_info 
 
 ## Get coordinates ##
-def get_coords(stp_file, N_chord, dist_airfoil, z_planes, close_TE, pitch_increment):    
+def get_coords(stp_file, N_chord, dist_airfoil, z_planes, close_TE, pitch_increment, find_LE):    
     
     ### Generate parametric points for airfoil section ###
     parametric_points, Node_ID_one_surf = airfoil_distribution(N_chord, dist_airfoil)
@@ -28,7 +28,7 @@ def get_coords(stp_file, N_chord, dist_airfoil, z_planes, close_TE, pitch_increm
         edge_objects = edges.objects
         
         ### Extract the Upper and Lower Surfaces Seperately
-        upper_surface, lower_surface = extract_info.extract_surfaces(edge_objects)
+        upper_surface, lower_surface = extract_info.extract_surfaces(edge_objects, find_LE)
         
         ## Assign the parametric points between 0 and 1 to the upper and lower surfaces
         parametric_points_up = parametric_points 
