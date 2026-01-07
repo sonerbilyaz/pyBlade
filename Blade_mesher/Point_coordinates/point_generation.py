@@ -7,7 +7,7 @@ from Geometry_operations import modify
 from Geometry_operations import extract_info 
 
 ## Get coordinates ##
-def get_coords(stp_file, N_chord, dist_airfoil, z_planes, close_TE, pitch_increment, find_LE):    
+def get_coords(stp_file, N_chord, dist_airfoil, z_planes, close_TE, pitch_increment, twist_local, taper_local, find_LE):    
     
     ### Generate parametric points for airfoil section ###
     parametric_points, Node_ID_one_surf = airfoil_distribution(N_chord, dist_airfoil)
@@ -19,7 +19,8 @@ def get_coords(stp_file, N_chord, dist_airfoil, z_planes, close_TE, pitch_increm
     ALL_cross_sections = []
     
     ALL_sections_DUST = []
-    for z in z_planes:
+
+    for z, twist, taper in zip(z_planes, twist_local, taper_local):
         # Create a section of the blade using the defined z-coord
         cross_section=blade.section(height=z)
         # Get all edges from the cross section
@@ -66,7 +67,12 @@ def get_coords(stp_file, N_chord, dist_airfoil, z_planes, close_TE, pitch_increm
         sorted_indices = np.argsort(data[:,0])
         data = data[sorted_indices]
         
+        ## Make sectional changes, if there are any ###
+        if np.any(twist_local!=0) or np.any(taper_local!=1):
+            data = modify.change_span(data, Node_ID_one_surf, twist, taper)
+
         data_DUST = data.copy()
+
         # Check for closing the TE[:,1:]*1e-03
         if close_TE is True:
             data = modify.close_TE_gap(data, Node_ID_one_surf, n=10)
@@ -76,7 +82,7 @@ def get_coords(stp_file, N_chord, dist_airfoil, z_planes, close_TE, pitch_increm
             # After closing the TE, make sure that upper TE node and lower TE point is the same for the NVLM solver (1st and last point)
             data[-1,1:] = data[0,1:]
             
-            
+        
         # Convert from mm to meter
         data[:,1:] = data[:,1:]*1e-03
         data_DUST[:,1:] = data_DUST[:,1:]*1e-03
