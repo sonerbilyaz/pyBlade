@@ -157,15 +157,16 @@ def change_span(points, Node_IDs_upper_surface, twist_local, taper_local):
     # Rotate the points (only x and y coordinates)
     points_origin_rotated_xy = np.dot(points_origin[:,0:2], Rz_neg.T)
     
-    ### Scale ###
-    # Scale the points to get the chord line between 0 and 1
-    points_origin_rotated_xy_scaled = points_origin_rotated_xy / chord_length
-    # Make sure that TE x coordinates are 1
-    points_origin_rotated_xy_scaled[0,0], points_origin_rotated_xy_scaled[-1,0] = 1, 1
-
+    # Center the section at the QUARTER chord location
+    ex = np.array([[1,0]])       # Unit vector in x-dir
+    points_origin_rotated_xy = points_origin_rotated_xy - ex*chord_length*0.25
+    
     """ #########################  REVERSE PROCESS #########################    """ 
-    ### Scale BACK ###
-    points_new_xy_scaled = points_origin_rotated_xy_scaled * chord_length * taper_local
+    ### Scale  ###
+    points_new_xy_scaled = points_origin_rotated_xy * taper_local
+    
+    ### Move LE to Origin ###
+    points_new_xy_scaled = points_new_xy_scaled + ex*chord_length*0.25
     
     ### Rotate BACK ###
     # 2D Rotation matrix for +z axis rotation 
