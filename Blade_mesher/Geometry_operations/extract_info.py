@@ -51,7 +51,7 @@ def get_TE(edge_objects):
 
     return TE, TE_upper_edge, TE_lower_edge
 
-def extract_surfaces(edges, find_LE):
+def extract_surfaces(config, edges):
     """
         Extracts the upper and lower surfaces, seperately 
         
@@ -69,10 +69,10 @@ def extract_surfaces(edges, find_LE):
             Upper surface as a single wire object
         
     """
-    
+
     ## First, get the edges adjacent to the TE at the upper&lower surfaces 
     _, TE_upper_edge, TE_lower_edge = get_TE(edges)
-
+    
     # Then, remove TE from the edges to begin the work
     edges = modify.remove_TE(edges)
 
@@ -80,7 +80,7 @@ def extract_surfaces(edges, find_LE):
     vertices = [np.array(v.toTuple()) for edge in edges for v in edge.vertices()]
     vertices = np.asarray(vertices)
     
-    if find_LE:
+    if config["find_LE"]:
         ## SPLIT THE FACE INTO 2 WHICH CONTAINS LE VERTEX 
 
         ## Get the edge midpoints (lowest x-coord of the midpoint will belong the the LE edge)

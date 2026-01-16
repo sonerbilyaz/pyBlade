@@ -1,5 +1,6 @@
 import numpy as np
 from . import extract_info
+from .Rotation import Rotate
 
 def remove_TE(edge_objects):
     """
@@ -107,15 +108,9 @@ def close_TE_gap(points, Node_IDs_upper_surface, n):
     return points_new
 
 def pitch_increase(points, pitch_increment):
-    # 2D Rotation matrix for -z axis rotation
-    Rz_neg = np.array([
-        [np.cos(np.radians(-pitch_increment)), np.sin(np.radians(-pitch_increment))],
-        [-np.sin(np.radians(-pitch_increment)),  np.cos(np.radians(-pitch_increment))]
-    ])
+    points_new = Rotate(points, pitch_increment, 'z')
 
-    points[:,:2] = points[:,:2] @ Rz_neg.T
-
-    return points
+    return points_new
 
 
 def change_span(points, Node_IDs_upper_surface, twist_local, taper_local):
@@ -161,23 +156,33 @@ def change_span(points, Node_IDs_upper_surface, twist_local, taper_local):
     ex = np.array([[1,0]])       # Unit vector in x-dir
     points_origin_rotated_xy = points_origin_rotated_xy - ex*chord_length*0.25
     
-    """ #########################  REVERSE PROCESS #########################    """ 
     ### Scale  ###
     points_new_xy_scaled = points_origin_rotated_xy * taper_local
-    
+
+    ### Add twist ###
+    # 2D Rotation matrix for +z axis rotation 
+    Rz = np.array([
+        [np.cos(np.radians(twist_local)), -np.sin(np.radians(twist_local))],
+        [np.sin(np.radians(twist_local)),  np.cos(np.radians(twist_local))]
+    ])
+
+    points_new_xy_scaled_twisted = np.dot(points_new_xy_scaled, Rz.T)
+
+    """ #########################  REVERSE PROCESS #########################    """ 
     ### Move LE to Origin ###
-    points_new_xy_scaled = points_new_xy_scaled + ex*chord_length*0.25
+    points_new_xy = points_new_xy_scaled_twisted + ex*chord_length*0.25
     
     ### Rotate BACK ###
     # 2D Rotation matrix for +z axis rotation 
     Rz = np.array([
-        [np.cos(angle_radians + np.radians(twist_local)), -np.sin(angle_radians + np.radians(twist_local))],
-        [np.sin(angle_radians + np.radians(twist_local)),  np.cos(angle_radians + np.radians(twist_local))]
+        [np.cos(angle_radians), -np.sin(angle_radians)],
+        [np.sin(angle_radians),  np.cos(angle_radians)]
     ])
-    points_new_xy_scaled_rotated = np.dot(points_new_xy_scaled, Rz.T)
     
+    points_new_origin = np.dot(points_new_xy, Rz.T)
+
     # Add Node ID and z-coordinate
-    points_new_scaled_rotated = np.hstack((np.linspace(1, num_points, num_points).reshape(num_points,1), points_new_xy_scaled_rotated)) # Insert Node ID
+    points_new_scaled_rotated = np.hstack((np.linspace(1, num_points, num_points).reshape(num_points,1), points_new_origin)) # Insert Node ID
     points_new_scaled_rotated = np.hstack((points_new_scaled_rotated, np.zeros((num_points,1)))) # Insert z-coordinate
     
     ### Move to Original position ###

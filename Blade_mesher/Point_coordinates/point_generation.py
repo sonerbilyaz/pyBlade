@@ -7,29 +7,35 @@ from Geometry_operations import modify
 from Geometry_operations import extract_info 
 
 ## Get coordinates ##
-def get_coords(stp_file, N_chord, dist_airfoil, z_planes, close_TE, pitch_increment, twist_local, taper_local, find_LE):    
+def get_coords(config, z_planes, collective_pitch, twist_local, chord_scale):
     
     ### Generate parametric points for airfoil section ###
-    parametric_points, Node_ID_one_surf = airfoil_distribution(N_chord, dist_airfoil)
+    parametric_points, Node_ID_one_surf = airfoil_distribution(config["N_chord"], config["dist_section"])
     
     # Load the .stp file
-    blade = cq.importers.importStep(stp_file)
+    blade = cq.importers.importStep(f'{config["input_dir"]}/{config["file"]}')
     
     ALL_sections = []
     ALL_cross_sections = []
     
     ALL_sections_DUST = []
 
-    for z, twist, taper in zip(z_planes, twist_local, taper_local):
+    for z, twist in zip(z_planes, twist_local):
         # Create a section of the blade using the defined z-coord
         cross_section=blade.section(height=z)
         # Get all edges from the cross section
         edges = cross_section.edges()
         # Access the edge objects from the Workplane
         edge_objects = edges.objects
+
+        ## First, check the rotation direction (CCW / CW ??)
+        # CW ==> Reverse the sign of x-coord (mirror)
+        if config["CCW"] is False:
+            edge_objects = [edge.mirror('ZY') for edge in edge_objects]
+            edge_objects = edge_objects[::-1]
         
         ### Extract the Upper and Lower Surfaces Seperately
-        upper_surface, lower_surface = extract_info.extract_surfaces(edge_objects, find_LE)
+        upper_surface, lower_surface = extract_info.extract_surfaces(config, edge_objects)
         
         ## Assign the parametric points between 0 and 1 to the upper and lower surfaces
         parametric_points_up = parametric_points 
@@ -43,10 +49,10 @@ def get_coords(stp_file, N_chord, dist_airfoil, z_planes, close_TE, pitch_increm
         reverse_upper_surf = upper_surface.positionAt(0).toTuple()[0] > upper_surface.positionAt(1).toTuple()[0]
         reverse_lower_surf = lower_surface.positionAt(0).toTuple()[0] > lower_surface.positionAt(1).toTuple()[0]
 
-        if reverse_upper_surf and dist_airfoil == 'cosine_LE':
+        if reverse_upper_surf and config["dist_section"] == 'cosine_LE':
             parametric_points_up = 1 - parametric_points_up
             
-        if reverse_lower_surf and dist_airfoil == 'cosine_LE':
+        if reverse_lower_surf and config["dist_section"] == 'cosine_LE':
             parametric_points_low = 1- parametric_points_low
             
         # Generate interpolated points along the upper and lower surfaces
@@ -54,8 +60,8 @@ def get_coords(stp_file, N_chord, dist_airfoil, z_planes, close_TE, pitch_increm
         lower_points = np.asarray([np.array(lower_surface.positionAt(t).toTuple()) for t in parametric_points_low])
         
         ## Increase pitch, if there are any ###
-        upper_points = modify.pitch_increase(upper_points, pitch_increment)
-        lower_points = modify.pitch_increase(lower_points, pitch_increment)
+        upper_points = modify.pitch_increase(upper_points, collective_pitch)
+        lower_points = modify.pitch_increase(lower_points, collective_pitch)
 
         # Insert Node ID  (From upper TE to lower TE)
         data_up  = np.insert(upper_points[:,:], 0, Node_ID_up, axis=1)    
@@ -68,13 +74,13 @@ def get_coords(stp_file, N_chord, dist_airfoil, z_planes, close_TE, pitch_increm
         data = data[sorted_indices]
         
         ## Make sectional changes, if there are any ###
-        if np.any(twist_local!=0) or np.any(taper_local!=1):
-            data = modify.change_span(data, Node_ID_one_surf, twist, taper)
+        if np.any(twist_local!=0) or chord_scale!=1:
+            data = modify.change_span(data, Node_ID_one_surf, twist, chord_scale)
 
         data_DUST = data.copy()
 
         # Check for closing the TE[:,1:]*1e-03
-        if close_TE is True:
+        if config["close_TE"] is True:
             data = modify.close_TE_gap(data, Node_ID_one_surf, n=10)
             ## Coordinates will be different for DUST basic mesh !! 
             # Last repeated point at the TE should be removed 
@@ -87,6 +93,13 @@ def get_coords(stp_file, N_chord, dist_airfoil, z_planes, close_TE, pitch_increm
         data[:,1:] = data[:,1:]*1e-03
         data_DUST[:,1:] = data_DUST[:,1:]*1e-03
         
+        ###     CHECK CCW !!!   ###
+        # If CW ==> Reverse the sign of x-coordinates 
+        # (mirror back to original)
+        if config["CCW"] is False:
+            data[:,1] = -data[:,1]
+            data_DUST[:,1] = -data_DUST[:,1]
+
         ### Append ALL data ###
         ## Sectional points should go from lower to upper TE !!!
         data[:,0] = data[:,0][::-1]     ## Reverse node id
