@@ -23,13 +23,13 @@ config = {"input_dir": None, "file": None, "output_dir": None,
 """ ################################ INPUTS ####################################### """
 #-------------------     File Properties     ------------------------
 # File paths and the STEP file
-config["input_dir"] = '../Runs/VX4_Aft_Rotor'
-config["file"] = 'VX4_Front_Blade_single.stp'
-case_prefix = 'VX4-front_prop'
-
 # config["input_dir"] = '../Runs/VX4_Front_Prop'
-# config["file"] = 'Aft_1Blade_Mesh_Orient.stp'
-# case_prefix = 'VX4-aft_prop'
+# config["file"] = 'VX4_Front_Blade_single.stp'
+# case_prefix = 'VX4-front_prop'
+
+config["input_dir"] = '../Runs/VX4_Aft_Rotor'
+config["file"] = 'Aft_1Blade_Mesh_Orient.stp'
+case_prefix = 'VX4-aft_prop'
 
 config["output_dir"] = f'{config["input_dir"]}/output'
 
@@ -46,15 +46,15 @@ config["CCW"] = False
 
 #-------------------     Panel Discretization     -------------------
 ## Chordwise Distribution ##
-config["N_chord"] = 23                          ## Upper and Lower surf separately!!
+config["N_chord"] = 21                          ## Upper and Lower surf separately!!
 config["dist_section"] = 'cosine_LE'
 
 ## Spanwise Distribution ##
-config["N_span"]= 62
-config["z_min"], config["z_max"] = 26, 150      ## in mm
+config["N_span"]= 35
+config["z_min"], config["z_max"] = 32.5, 152      ## in mm
 
 config["dist_spanwise"] = 'cosine_TIP'
-config["r_R"] = 0.82                            ## Span location to start the cosine_TIP 
+config["r_R"] = 0.71                            ## Span location to start the cosine_TIP 
 
 ## TE Modification ##
 config["remove_TE"] = True            # Should we remove TE ??

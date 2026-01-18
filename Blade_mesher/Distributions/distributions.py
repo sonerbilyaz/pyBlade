@@ -67,7 +67,7 @@ def spanwise_disribution(z_min, z_max, spanwise_panel_num, dist, r_R):
         points = z_min + points * (z_max - z_min)
         
         ## Remove the last 3rd and 2nd elements since it creates skew panels
-        points = np.delete(points,[-3,-2])
+        points = np.delete(points,[-2])
         
         return points
     
