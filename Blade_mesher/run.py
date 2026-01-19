@@ -50,11 +50,11 @@ config["N_chord"] = 21                          ## Upper and Lower surf separate
 config["dist_section"] = 'cosine_LE'
 
 ## Spanwise Distribution ##
-config["N_span"]= 35
+config["N_span"]= 33
 config["z_min"], config["z_max"] = 32.5, 152      ## in mm
 
 config["dist_spanwise"] = 'cosine_TIP'
-config["r_R"] = 0.71                            ## Span location to start the cosine_TIP 
+config["r_R"] = 0.75                            ## Span location to start the cosine_TIP 
 
 ## TE Modification ##
 config["remove_TE"] = True            # Should we remove TE ??
@@ -119,6 +119,11 @@ def run(config, z_planes):
 
     ## Export the DUST connectivity by switching from python index to dust index
     connectivity_DUST = connectivity_DUST + np.ones(connectivity_DUST.shape)
+
+    ## !!!!!!! Connectivity will be reversed for the CW rotation !!!!!!!
+    if config["CCW"] is False:
+        connectivity_DUST = connectivity_DUST[:,::-1]
+
     with open(f'{DUST_dir}/ee.dat', 'w') as file:
         np.savetxt(file, connectivity_DUST, delimiter='\t', fmt=['%.0f','%.0f','%.0f','%.0f'], comments='')
 
@@ -178,6 +183,11 @@ def run_modify_section(config, z_planes):
 
                 ## Export the DUST connectivity by switching from python index to dust index
                 connectivity_DUST = connectivity_DUST + np.ones(connectivity_DUST.shape)
+
+                ## !!!!!!! Connectivity will be reversed for the CW rotation !!!!!!!
+                if config["CCW"] is False:
+                    connectivity_DUST = connectivity_DUST[:,::-1]
+
                 with open(f'{DUST_dir}/ee.dat', 'w') as file:
                     np.savetxt(file, connectivity_DUST, delimiter='\t', fmt=['%.0f','%.0f','%.0f','%.0f'], comments='')
 
