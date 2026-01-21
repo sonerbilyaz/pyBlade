@@ -60,8 +60,8 @@ def get_coords(config, z_planes, collective_pitch, twist_local, chord_scale):
         lower_points = np.asarray([np.array(lower_surface.positionAt(t).toTuple()) for t in parametric_points_low])
         
         ## Increase pitch, if there are any ###
-        upper_points = modify.pitch_increase(upper_points, collective_pitch)
-        lower_points = modify.pitch_increase(lower_points, collective_pitch)
+        upper_points = modify.pitch_increase(upper_points, config["initial_coll_pitch"] + collective_pitch)
+        lower_points = modify.pitch_increase(lower_points, config["initial_coll_pitch"] + collective_pitch)
 
         # Insert Node ID  (From upper TE to lower TE)
         data_up  = np.insert(upper_points[:,:], 0, Node_ID_up, axis=1)    

@@ -16,20 +16,20 @@ from Mesher.mesh import generate_mesh
 config = {"input_dir": None, "file": None, "output_dir": None, 
           "find_LE": None, "remove_TE":None , "close_TE":None , "CCW": None,
           "N_chord": None, "N_span": None, "z_min": None, "z_max": None, 
-          "dist_section": None, "dist_spanwise": None, "r_R": None,
-          "collective_pitch": None, "twist_root": None, "twist_tip": None, "chord_scale": None
+          "initial_coll_pitch": None, "dist_section": None, "dist_spanwise": None, "r_R": None,
+          "coll_pitch_increment": None, "twist_root": None, "twist_tip": None, "chord_scale": None
           }
 
 """ ################################ INPUTS ####################################### """
 #-------------------     File Properties     ------------------------
 # File paths and the STEP file
-# config["input_dir"] = '../Runs/VX4_Front_Prop'
-# config["file"] = 'VX4_Front_Blade_single.stp'
-# case_prefix = 'VX4-front_prop'
+config["input_dir"] = '../Runs/VX4_Front_Prop'
+config["file"] = 'VX4_Front_Blade_single.stp'
+case_prefix = 'VX4-front_prop'
 
-config["input_dir"] = '../Runs/VX4_Aft_Rotor'
-config["file"] = 'Aft_1Blade_Mesh_Orient.stp'
-case_prefix = 'VX4-aft_prop'
+# config["input_dir"] = '../Runs/VX4_Aft_Rotor'
+# config["file"] = 'Aft_1Blade_Mesh_Orient.stp'
+# case_prefix = 'VX4-aft_prop'
 
 config["output_dir"] = f'{config["input_dir"]}/output'
 
@@ -42,7 +42,7 @@ config["find_LE"] = False
 ## Rotor Rotation direction (CCW)
 #   If True (CCW)   ==> Leave x-coordinate as it is
 #   If False (CW)   ==> Reverse x-coordinate direction
-config["CCW"] = False
+config["CCW"] = True
 
 #-------------------     Panel Discretization     -------------------
 ## Chordwise Distribution ##
@@ -50,8 +50,8 @@ config["N_chord"] = 21                          ## Upper and Lower surf separate
 config["dist_section"] = 'cosine_LE'
 
 ## Spanwise Distribution ##
-config["N_span"]= 33
-config["z_min"], config["z_max"] = 32.5, 152      ## in mm
+config["N_span"]= 34
+config["z_min"], config["z_max"] = 26, 150      ## in mm
 
 config["dist_spanwise"] = 'cosine_TIP'
 config["r_R"] = 0.75                            ## Span location to start the cosine_TIP 
@@ -61,32 +61,34 @@ config["remove_TE"] = True            # Should we remove TE ??
 config["close_TE"] = True             # Should we close the TE gap ??
 
 #-----------------     Initialize section change     ------------------
-### Create spanwise planes ###
-z_planes = spanwise_planes(config["z_min"], config["z_max"], config["N_span"], config["dist_spanwise"], config["r_R"])
+config["initial_coll_pitch"] = 0
 
-config["collective_pitch"] = np.array([0])
+config["coll_pitch_increment"] = np.array([0])
 config["chord_scale"] = np.array([1])
 config["twist_root"] = np.array([0])
 
 config["twist_tip"] = np.array([0])
 
 #-----------------------     Section Change     -----------------------
-# ## Collective Pitch Modification (deg) ##
-# config["collective_pitch"] = np.linspace(0,20,2)
+# config["initial_coll_pitch"] = 14
 
-# ### Spanwise local Changes ###
-# config["chord_scale"] = np.linspace(0.7,1.3,2)
-# config["twist_root"] = [0,10]
-# config["twist_tip"] = [0,0]
+## Collective Pitch Modification (deg) ##
+# config["coll_pitch_increment"] = np.linspace(-5,15,8)
+
+### Spanwise local Changes ###
+# config["chord_scale"] = np.linspace(0.6,1.35,8)
+# config["twist_root"] = np.linspace(0,20,8)
+# config["twist_tip"] = np.zeros_like(config["twist_root"])
 
 #-------------------------     .pts Inputs     -------------------------
-n_blades = 1                # Number of blades
+n_blades = 5                # Number of blades
 surf_type = 'propeller'     # Surface type (wing/propeller)
 rotation_center = [0, 0, 0]
 rotation_axis = [0, -1, 0]
 
 """ ############################################################################## """
-
+### Create spanwise planes ###
+z_planes = spanwise_planes(config["z_min"], config["z_max"], config["N_span"], config["dist_spanwise"], config["r_R"])
 
 
 # Create output directory if it is absent #
@@ -95,7 +97,7 @@ if os.path.isdir(config["output_dir"]) is False:
 
 
 ### Create flag for the output file name ###
-cond_no_change = (config["collective_pitch"] == 0).all() and (config["chord_scale"] == 1).all() and (config["twist_root"] == 0).all()
+cond_no_change = (config["coll_pitch_increment"] == 0).all() and (config["chord_scale"] == 1).all() and (config["twist_root"] == 0).all()
 
 
 def run(config, z_planes):
@@ -148,7 +150,7 @@ def run(config, z_planes):
 
 def run_modify_section(config, z_planes):
 
-    for collective_pitch in config["collective_pitch"]:
+    for collective_pitch in config["coll_pitch_increment"]:
         for k in range(len(config["twist_root"])):
             for chord_scale in config["chord_scale"]:
 
