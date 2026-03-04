@@ -71,10 +71,7 @@ def generate_mesh(ALL_sections, ALL_sections_DUST,  n_blades, close_TE):
     connectivity_DUST = np.concatenate([cell for cell in connectivity_DUST], axis=0)
     
     """ ##############         CREATE MESH       #############"""
-    # Generate the DUST mesh #
-    points_DUST = Rotate(points_DUST, -90, axis='x')
-    points_DUST = Rotate(points_DUST, -90, axis='z')
-    
+    # Generate the DUST mesh #    
     cells = [('quad', connectivity_DUST)]
     mesh_DUST= meshio.Mesh(points_DUST, cells)
     

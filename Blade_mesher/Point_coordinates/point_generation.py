@@ -3,8 +3,8 @@ import numpy as np
 
 from Distributions.distributions import airfoil_distribution
 
-from Geometry_operations import modify
-from Geometry_operations import extract_info 
+from Geometry_operations import modify, extract_info
+from Geometry_operations.Rotation import Rotate
 
 ## Get coordinates ##
 def get_coords(config, z_planes, collective_pitch, twist_local, chord_scale):
@@ -100,6 +100,13 @@ def get_coords(config, z_planes, collective_pitch, twist_local, chord_scale):
             data[:,1] = -data[:,1]
             data_DUST[:,1] = -data_DUST[:,1]
 
+
+        ### ADJUST THE ORIENTATION !! (z-axis rotation same as DUST!!)
+        data[:,1:] = Rotate(data[:,1:], -90, axis='x')
+        data[:,1:] = Rotate(data[:,1:], -90, axis='z')
+        data_DUST[:,1:] = Rotate(data_DUST[:,1:], -90, axis='x')
+        data_DUST[:,1:] = Rotate(data_DUST[:,1:], -90, axis='z')
+        
         ### Append ALL data ###
         ## Sectional points should go from lower to upper TE !!!
         data[:,0] = data[:,0][::-1]     ## Reverse node id
