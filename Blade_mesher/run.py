@@ -22,15 +22,15 @@ config = {"input_dir": None, "file": None, "output_dir": None,
 
 """ ################################ INPUTS ####################################### """
 #-------------------     File Properties     ------------------------
-# File paths and the STEP file
-config["input_dir"] = '../Runs/12x6_ClarkY'
-config["file"] = '12x6_ClarkY-1_Blade.stp'
-case_prefix = '12x6_prop'
-
 # # File paths and the STEP file
-# config["input_dir"] = '../Runs/VX4_Front_Prop'
-# config["file"] = 'VX4_Front_Blade_single.stp'
-# case_prefix = 'VX4-front_prop'
+# config["input_dir"] = '../Runs/12x6_ClarkY'
+# config["file"] = '12x6_ClarkY-1_Blade.stp'
+# case_prefix = '12x6_prop'
+
+# File paths and the STEP file
+config["input_dir"] = '../Runs/VX4_Front_Prop'
+config["file"] = 'VX4_Front_Blade_single.stp'
+case_prefix = 'VX4-front_prop'
 
 # config["input_dir"] = '../Runs/VX4_Aft_Rotor'
 # config["file"] = 'Aft_1Blade_Mesh_Orient.stp'
@@ -42,7 +42,7 @@ config["output_dir"] = f'{config["input_dir"]}/output'
 ## Are upper and lower surfaces seperated ???
 #   If yes ==> LE is determined (find_LE = False) 
 #   If NO  ==> LE is NOT determined (find_LE = True) 
-config["find_LE"] = True
+config["find_LE"] = False
 
 ## Rotor Rotation direction (CCW)
 #   If True (CCW)   ==> Leave x-coordinate as it is
@@ -51,12 +51,12 @@ config["CCW"] = True
 
 #-------------------     Panel Discretization     -------------------
 ## Chordwise Distribution ##
-config["N_chord"] = int(21/1.1)+1                          ## Upper and Lower surf separately!!
+config["N_chord"] = 23                          ## Upper and Lower surf separately!!
 config["dist_section"] = 'cosine_LE'
 
 ## Spanwise Distribution ##
-config["N_span"]= int(45/1.7)+4
-config["z_min"], config["z_max"] = 24, 151.5      ## in mm
+config["N_span"]= 35
+config["z_min"], config["z_max"] = 26, 150      ## in mm
 
 config["dist_spanwise"] = 'cosine_TIP'
 config["r_R"] = 0.78                            ## Span location to start the cosine_TIP 
@@ -86,10 +86,10 @@ config["twist_tip"] = np.array([0])
 # config["twist_tip"] = np.zeros_like(config["twist_root"])
 
 #-------------------------     .pts Inputs     -------------------------
-n_blades = 2                # Number of blades
+n_blades = 5                # Number of blades
 surf_type = 'propeller'     # Surface type (wing/propeller)
 rotation_center = [0, 0, 0]
-rotation_axis = [0, -1, 0]
+rotation_axis = [0, 0, 1]
 
 """ ############################################################################## """
 ### Create spanwise planes ###

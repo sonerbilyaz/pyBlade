@@ -81,7 +81,7 @@ def get_coords(config, z_planes, collective_pitch, twist_local, chord_scale):
 
         # Check for closing the TE[:,1:]*1e-03
         if config["close_TE"] is True:
-            data = modify.close_TE_gap(data, Node_ID_one_surf, n=10)
+            data = modify.close_TE_gap(data, Node_ID_one_surf)
             ## Coordinates will be different for DUST basic mesh !! 
             # Last repeated point at the TE should be removed 
             data_DUST = data[1:,:].copy()
