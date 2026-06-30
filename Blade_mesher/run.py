@@ -38,7 +38,6 @@ case_prefix = 'VX4-front_prop'
 
 config["output_dir"] = f'{config["input_dir"]}/output'
 
-
 ## Are upper and lower surfaces seperated ???
 #   If yes ==> LE is determined (find_LE = False) 
 #   If NO  ==> LE is NOT determined (find_LE = True) 
@@ -75,7 +74,7 @@ config["twist_root"] = np.array([0])
 config["twist_tip"] = np.array([0])
 
 #-----------------------     Section Change     -----------------------
-# config["initial_coll_pitch"] = 14
+config["initial_coll_pitch"] = 14
 
 # # Collective Pitch Modification (deg) ##
 # config["coll_pitch_increment"] = np.linspace(-5,15,8)
@@ -107,7 +106,7 @@ cond_no_change = (config["coll_pitch_increment"] == 0).all() and (config["chord_
 
 def run(config, z_planes):
     #########   GENERATE POINTS  ##########
-    ALL_sections, ALL_sections_DUST, all_sections_compound = points.get_coords(config, z_planes, collective_pitch=0, twist_local=np.zeros_like(z_planes), chord_scale=1)
+    ALL_sections, ALL_sections_DUST, all_sections_compound, pitch, chord = points.get_coords(config, z_planes, collective_pitch=0, twist_local=np.zeros_like(z_planes), chord_scale=1)
         
     ######### GENERATE MESH AND EXPORT #######
     mesh, mesh_DUST, connectivity_DUST, coordinates_DUST = generate_mesh(ALL_sections, ALL_sections_DUST, n_blades, config["close_TE"])
@@ -153,6 +152,9 @@ def run(config, z_planes):
 
     ########################################################################################        
 
+    #########    Export pitch and chord    #########
+    np.savetxt(f'{config["output_dir"]}/{case_prefix}_pitch_chord.txt', np.concatenate([z_planes[:, None]/config["z_max"], chord[:, None], pitch[:,None]], axis=1), header='r_R' + '\t' + 'chord' + '\t' +'pitch', delimiter='\t')
+
 def run_modify_section(config, z_planes):
 
     for collective_pitch in config["coll_pitch_increment"]:
@@ -170,7 +172,7 @@ def run_modify_section(config, z_planes):
                 twist_local = np.linspace(config["twist_root"][k], config["twist_tip"][k], len(z_planes))
 
                 ###### GENERATE POINTS ######
-                ALL_sections, ALL_sections_DUST, all_sections_compound = points.get_coords(config, z_planes, collective_pitch, twist_local, chord_scale)
+                ALL_sections, ALL_sections_DUST, all_sections_compound, pitch, chord = points.get_coords(config, z_planes, collective_pitch, twist_local, chord_scale)
                     
                 ###### GENERATE MESH AND EXPORT #######
                 mesh, mesh_DUST, connectivity_DUST, coordinates_DUST = generate_mesh(ALL_sections, ALL_sections_DUST, n_blades, config["close_TE"])

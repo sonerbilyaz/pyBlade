@@ -29,7 +29,7 @@ def remove_TE(edge_objects):
     
     return filtered_edges
     
-def close_TE_gap(points, Node_IDs_upper_surface, n=10, x_0 = 0.79):    
+def close_TE_gap(points, Node_IDs_upper_surface, n=10, x_0 = 0.7):    
     ##################  Get the information from the section ##################
     num_points = points.shape[0]
     # First point in the sectional points is "TE_upper", and the last one is "TE_lower"
@@ -81,8 +81,8 @@ def close_TE_gap(points, Node_IDs_upper_surface, n=10, x_0 = 0.79):
     
     ## Close the TE with the equation
     ## TE closure function
-    w_x_up = np.where(upper_surface[:,0] > x_0, ((upper_surface[:,0]-x_0)/(1-x_0))**n, 0)
-    w_x_low = np.where(lower_surface[:,0] > x_0, ((lower_surface[:,0]-x_0)/(1-x_0))**n, 0)
+    w_x_up = np.where(upper_surface[:,0] > x_0, upper_surface[:,0]**n, 0)
+    w_x_low = np.where(lower_surface[:,0] > x_0, lower_surface[:,0]**n, 0)
 
     upper_surface[:,1] = upper_surface[:,1] + w_x_up*(TE_length/chord_length)/2
     lower_surface[:,1] = lower_surface[:,1] - w_x_low*(TE_length/chord_length)/2
@@ -109,7 +109,8 @@ def close_TE_gap(points, Node_IDs_upper_surface, n=10, x_0 = 0.79):
     
     ## Make sure that the upper TE node and lower TE node are the same (1st and last point will be the same, coincides on top of each other)
     points_new = points_new_scaled_rotated.copy() 
-    return points_new
+
+    return points_new, np.rad2deg(angle_radians), chord_length
 
 def pitch_increase(points, pitch_increment):
     points_new = Rotate(points, pitch_increment, 'z')

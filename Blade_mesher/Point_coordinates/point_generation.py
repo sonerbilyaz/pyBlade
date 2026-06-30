@@ -17,7 +17,9 @@ def get_coords(config, z_planes, collective_pitch, twist_local, chord_scale):
     
     ALL_sections = []
     ALL_cross_sections = []
-    
+    ALL_sections_pitch = []
+    ALL_sections_chord = []
+
     ALL_sections_DUST = []
 
     for z, twist in zip(z_planes, twist_local):
@@ -81,7 +83,7 @@ def get_coords(config, z_planes, collective_pitch, twist_local, chord_scale):
 
         # Check for closing the TE[:,1:]*1e-03
         if config["close_TE"] is True:
-            data = modify.close_TE_gap(data, Node_ID_one_surf)
+            data, pitch, chord = modify.close_TE_gap(data, Node_ID_one_surf)
             ## Coordinates will be different for DUST basic mesh !! 
             # Last repeated point at the TE should be removed 
             data_DUST = data[1:,:].copy()
@@ -111,7 +113,9 @@ def get_coords(config, z_planes, collective_pitch, twist_local, chord_scale):
         ## Sectional points should go from lower to upper TE !!!
         data[:,0] = data[:,0][::-1]     ## Reverse node id
         ALL_sections.append(data[::-1]) ## Reverse points order
-        
+        ALL_sections_pitch.append(pitch)
+        ALL_sections_chord.append(chord)
+
         data_DUST[:,0] = data_DUST[:,0][::-1]     ## Reverse node id
         ALL_sections_DUST.append(data_DUST[::-1]) ## Reverse points order
         
@@ -121,4 +125,4 @@ def get_coords(config, z_planes, collective_pitch, twist_local, chord_scale):
     ## Export all cross sections as a step file (Optional)
     all_sections_compound = cq.Compound.makeCompound(ALL_cross_sections)      
     
-    return ALL_sections, ALL_sections_DUST, all_sections_compound
+    return ALL_sections, ALL_sections_DUST, all_sections_compound, np.asarray(ALL_sections_pitch), np.asarray(ALL_sections_chord)
