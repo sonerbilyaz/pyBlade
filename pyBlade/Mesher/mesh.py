@@ -1,8 +1,8 @@
 import meshio
 import numpy as np
-from Geometry_operations.Rotation import Rotate
+from ..Geometry_operations.Rotation import Rotate
 
-def generate_mesh(ALL_sections, ALL_sections_DUST,  n_blades, close_TE):
+def generate_mesh(ALL_sections, ALL_sections_DUST, close_TE):
     
     """ CCW ORDER: Start from lower left and go clockwise 
     (Looking from + to - surface normal !!)
@@ -44,7 +44,7 @@ def generate_mesh(ALL_sections, ALL_sections_DUST,  n_blades, close_TE):
             ## (For the last element in each span, connectivity will be linked to 1st element)
 
             # Connectivity will not change for the intermediate points
-            if close_TE is False or (i_DUST+1)%n_chord_DUST!=0:
+            if close_TE != 'yes' or (i_DUST+1)%n_chord_DUST!=0:
 
                 p1_index_DUST = np.flatnonzero((blade_DUST == blade_DUST_grid[k,i_DUST]).all(1))[0]         ## UL (1)   
                 p2_index_DUST = np.flatnonzero((blade_DUST == blade_DUST_grid[k,i_DUST+1]).all(1))[0]       ## LL (2)

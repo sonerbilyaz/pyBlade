@@ -30,8 +30,8 @@ def airfoil_distribution(num_points, dist):
         points = np.sort(points)
         
         Node_ID_one_surf = np.linspace(num_points, 1, num_points)
-    if dist == 'linear':
-        # Remain linear
+    if dist == 'uniform':
+        # Remain uniform
         points = np.linspace(1, 0, num_points)
         
         Node_ID_one_surf = np.linspace(num_points, 1, num_points)
@@ -39,6 +39,9 @@ def airfoil_distribution(num_points, dist):
     return points, Node_ID_one_surf.astype(int)
 
 def spanwise_disribution(z_min, z_max, spanwise_panel_num, dist, r_R):
+
+    ## First, convert strings from config file into floats
+    z_min, z_max, spanwise_panel_num, r_R = float(z_min), float(z_max), float(spanwise_panel_num), float(r_R)
     # Normalizing function when we shift clustering location of the points between (0 and 1)
     def normalize(data, min_val, max_val):
         return min_val + (data - data.min()) * (max_val - min_val) / (data.max() - data.min())

@@ -1,0 +1,9 @@
+LICENSE
+README.md
+setup.py
+pyBlade.egg-info/PKG-INFO
+pyBlade.egg-info/SOURCES.txt
+pyBlade.egg-info/dependency_links.txt
+pyBlade.egg-info/entry_points.txt
+pyBlade.egg-info/requires.txt
+pyBlade.egg-info/top_level.txt

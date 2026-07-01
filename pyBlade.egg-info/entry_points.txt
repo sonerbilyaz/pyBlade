@@ -1,0 +1,2 @@
+[console_scripts]
+pyBlade = pyBlade.run:run

@@ -1,19 +1,19 @@
 import cadquery as cq # type: ignore
 import numpy as np
 
-from Distributions.distributions import airfoil_distribution
+from ..Distributions.distributions import airfoil_distribution
 
-from Geometry_operations import modify, extract_info
-from Geometry_operations.Rotation import Rotate
+from ..Geometry_operations import modify, extract_info
+from ..Geometry_operations.Rotation import Rotate
 
 ## Get coordinates ##
 def get_coords(config, z_planes, collective_pitch, twist_local, chord_scale):
     
     ### Generate parametric points for airfoil section ###
-    parametric_points, Node_ID_one_surf = airfoil_distribution(config["N_chord"], config["dist_section"])
+    parametric_points, Node_ID_one_surf = airfoil_distribution(int(config["PANELS"]["N_chord"]), config["PANELS"]["dist_chord"])
     
     # Load the .stp file
-    blade = cq.importers.importStep(f'{config["input_dir"]}/{config["file"]}')
+    blade = cq.importers.importStep(f'{config["FILE"]["stp_file"]}')
     
     ALL_sections = []
     ALL_cross_sections = []
@@ -32,7 +32,7 @@ def get_coords(config, z_planes, collective_pitch, twist_local, chord_scale):
 
         ## First, check the rotation direction (CCW / CW ??)
         # CW ==> Reverse the sign of x-coord (mirror)
-        if config["CCW"] is False:
+        if config["IDENTIFY"]["rotation"] == "CW":
             edge_objects = [edge.mirror('ZY') for edge in edge_objects]
             edge_objects = edge_objects[::-1]
         
@@ -51,10 +51,10 @@ def get_coords(config, z_planes, collective_pitch, twist_local, chord_scale):
         reverse_upper_surf = upper_surface.positionAt(0).toTuple()[0] > upper_surface.positionAt(1).toTuple()[0]
         reverse_lower_surf = lower_surface.positionAt(0).toTuple()[0] > lower_surface.positionAt(1).toTuple()[0]
 
-        if reverse_upper_surf and config["dist_section"] == 'cosine_LE':
+        if reverse_upper_surf and config["PANELS"]["dist_chord"] == 'cosine_LE':
             parametric_points_up = 1 - parametric_points_up
             
-        if reverse_lower_surf and config["dist_section"] == 'cosine_LE':
+        if reverse_lower_surf and config["PANELS"]["dist_chord"] == 'cosine_LE':
             parametric_points_low = 1- parametric_points_low
             
         # Generate interpolated points along the upper and lower surfaces
@@ -62,8 +62,8 @@ def get_coords(config, z_planes, collective_pitch, twist_local, chord_scale):
         lower_points = np.asarray([np.array(lower_surface.positionAt(t).toTuple()) for t in parametric_points_low])
         
         ## Increase pitch, if there are any ###
-        upper_points = modify.pitch_increase(upper_points, config["initial_coll_pitch"] + collective_pitch)
-        lower_points = modify.pitch_increase(lower_points, config["initial_coll_pitch"] + collective_pitch)
+        upper_points = modify.pitch_increase(upper_points, collective_pitch)
+        lower_points = modify.pitch_increase(lower_points, collective_pitch)
 
         # Insert Node ID  (From upper TE to lower TE)
         data_up  = np.insert(upper_points[:,:], 0, Node_ID_up, axis=1)    
@@ -82,7 +82,7 @@ def get_coords(config, z_planes, collective_pitch, twist_local, chord_scale):
         data_DUST = data.copy()
 
         # Check for closing the TE[:,1:]*1e-03
-        if config["close_TE"] is True:
+        if config["PANELS"]["close_TE"] in ['yes', True, 'Yes']:
             data, pitch, chord = modify.close_TE_gap(data, Node_ID_one_surf)
             ## Coordinates will be different for DUST basic mesh !! 
             # Last repeated point at the TE should be removed 
@@ -98,7 +98,7 @@ def get_coords(config, z_planes, collective_pitch, twist_local, chord_scale):
         ###     CHECK CCW !!!   ###
         # If CW ==> Reverse the sign of x-coordinates 
         # (mirror back to original)
-        if config["CCW"] is False:
+        if config["IDENTIFY"]["rotation"] == "CW":
             data[:,1] = -data[:,1]
             data_DUST[:,1] = -data_DUST[:,1]
 

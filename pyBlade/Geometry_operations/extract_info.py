@@ -80,7 +80,7 @@ def extract_surfaces(config, edges):
     vertices = [np.array(v.toTuple()) for edge in edges for v in edge.vertices()]
     vertices = np.asarray(vertices)
     
-    if config["find_LE"]:
+    if config["IDENTIFY"]["find_LE"] in ['yes', True, 'Yes']:
         ## SPLIT THE FACE INTO 2 WHICH CONTAINS LE VERTEX 
 
         ## Get the edge midpoints (lowest x-coord of the midpoint will belong the the LE edge)
