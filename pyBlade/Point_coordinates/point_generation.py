@@ -10,7 +10,7 @@ from ..Geometry_operations.Rotation import Rotate
 def get_coords(config, z_planes, collective_pitch, twist_local, chord_scale):
     
     ### Generate parametric points for airfoil section ###
-    parametric_points, Node_ID_one_surf = airfoil_distribution(int(config["PANELS"]["N_chord"]), config["PANELS"]["dist_chord"])
+    parametric_points, Node_ID_one_surf = airfoil_distribution(int(config["PANEL"]["N_chord"]), config["PANEL"]["dist_chord"])
     
     # Load the .stp file
     blade = cq.importers.importStep(f'{config["FILE"]["stp_file"]}')
@@ -51,10 +51,10 @@ def get_coords(config, z_planes, collective_pitch, twist_local, chord_scale):
         reverse_upper_surf = upper_surface.positionAt(0).toTuple()[0] > upper_surface.positionAt(1).toTuple()[0]
         reverse_lower_surf = lower_surface.positionAt(0).toTuple()[0] > lower_surface.positionAt(1).toTuple()[0]
 
-        if reverse_upper_surf and config["PANELS"]["dist_chord"] == 'cosine_LE':
+        if reverse_upper_surf and config["PANEL"]["dist_chord"] == 'cosine_LE':
             parametric_points_up = 1 - parametric_points_up
             
-        if reverse_lower_surf and config["PANELS"]["dist_chord"] == 'cosine_LE':
+        if reverse_lower_surf and config["PANEL"]["dist_chord"] == 'cosine_LE':
             parametric_points_low = 1- parametric_points_low
             
         # Generate interpolated points along the upper and lower surfaces
@@ -82,7 +82,7 @@ def get_coords(config, z_planes, collective_pitch, twist_local, chord_scale):
         data_DUST = data.copy()
 
         # Check for closing the TE[:,1:]*1e-03
-        if config["PANELS"]["close_TE"] in ['yes', True, 'Yes']:
+        if config["PANEL"]["close_TE"] in ['yes', True, 'Yes']:
             data, pitch, chord = modify.close_TE_gap(data, Node_ID_one_surf)
             ## Coordinates will be different for DUST basic mesh !! 
             # Last repeated point at the TE should be removed 

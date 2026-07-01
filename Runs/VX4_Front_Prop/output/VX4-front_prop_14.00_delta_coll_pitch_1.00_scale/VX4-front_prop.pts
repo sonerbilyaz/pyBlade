@@ -1,9 +1,6 @@
 ######## Panel parameters ########
-type=propeller
 n_blades=5
 
-rotation_center=[0, 0, 0]
-rotation_axis=[0, 0, 1]
 n_span_all= 41
 n_points=45
 ######## End of parameters ########

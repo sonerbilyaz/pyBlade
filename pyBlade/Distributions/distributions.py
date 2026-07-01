@@ -41,7 +41,7 @@ def airfoil_distribution(num_points, dist):
 def spanwise_disribution(z_min, z_max, spanwise_panel_num, dist, r_R):
 
     ## First, convert strings from config file into floats
-    z_min, z_max, spanwise_panel_num, r_R = float(z_min), float(z_max), float(spanwise_panel_num), float(r_R)
+    z_min, z_max, spanwise_panel_num, r_R = float(z_min), float(z_max), int(spanwise_panel_num), float(r_R)
     # Normalizing function when we shift clustering location of the points between (0 and 1)
     def normalize(data, min_val, max_val):
         return min_val + (data - data.min()) * (max_val - min_val) / (data.max() - data.min())
