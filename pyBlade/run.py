@@ -1,38 +1,78 @@
-import numpy as np, ast
+import numpy as np, ast, cadquery as cq         # type: ignore
 
-from .in_out import export_mesh as export
+from .in_out import export
 
 from .Distributions.distributions import spanwise_disribution as spanwise_planes
 from .Point_coordinates import point_generation as points
 from .Mesher.mesh import generate_mesh
+from .Blade_Generate.blade import create_Blade
+from .Blade_Generate import mesh_blade
 
-
-def run(config, z_planes):
+def run_mesh(config):
     
-    #########   GENERATE POINTS  ##########
-    ALL_sections, ALL_sections_DUST, all_sections_compound, pitch, chord = points.get_coords(config, z_planes, collective_pitch=0, twist_local=np.zeros_like(z_planes), chord_scale=1)
-        
-    #########   GENERATE MESH  #######
-    mesh, mesh_DUST, connectivity_DUST, coordinates_DUST = generate_mesh(ALL_sections, ALL_sections_DUST, config["PANEL"]["close_TE"])
+    # Load the .stp file
+    blade = cq.importers.importStep(f'{config["FILE"]["stp_file"]}')
+    
+    ## Create spanwise planes ###
+    z_planes = spanwise_planes(config["PANEL"]["z_min"], config["PANEL"]["z_max"], config["PANEL"]["N_span"], config["PANEL"]["dist_span"], config["PANEL"]["r_R"])
 
-    #########   EXPORT   #######
-    export.export(config, ALL_sections, z_planes, pitch, chord, mesh, mesh_DUST, connectivity_DUST, coordinates_DUST)
-
-def run_modify_planform(config, z_planes):
-
-    collect_pitch = np.array(ast.literal_eval(config["MODIFY"]["collect_pitch"])).astype(float)
-    scale = np.array(ast.literal_eval(config["MODIFY"]["scale"])).astype(float)
+    collect_pitch = np.array(ast.literal_eval(config["PANEL"]["collect_pitch"])).astype(float)
+    scale = np.array(ast.literal_eval(config["PANEL"]["scale"])).astype(float)
 
     for coll_pitch in collect_pitch:
         for chord_scale in scale:
 
-            case_name = '{}_{:.2f}_delta_coll_pitch_{:.2f}_scale'.format(config["FILE"]["name_tag"], coll_pitch, chord_scale)
+            if config["PANEL"]["collect_pitch"] == '[0]' and config["PANEL"]["scale"] == '[1]':
+                case_name = config["FILE"]["name_tag"]                
+            else:
+                case_name = '{}_{:.2f}_delta_coll_pitch_{:.2f}_scale'.format(config["FILE"]["name_tag"], coll_pitch, chord_scale)
 
             ######  GENERATE POINTS  ######
-            ALL_sections, ALL_sections_DUST, all_sections_compound, pitch, chord = points.get_coords(config, z_planes, coll_pitch, np.zeros_like(z_planes), chord_scale)
+            ALL_sections, ALL_sections_DUST, pitch, chord = points.get_coords(blade, config, z_planes, coll_pitch, np.zeros_like(z_planes), chord_scale)
                 
             ######  GENERATE MESH   #######
-            mesh, mesh_DUST, connectivity_DUST, coordinates_DUST = generate_mesh(ALL_sections, ALL_sections_DUST, config["PANEL"]["close_TE"])
+            mesh, mesh_DUST, connectivity_DUST, coordinates_DUST = generate_mesh(ALL_sections, ALL_sections_DUST, config["SURFACE"]["close_TE"])
 
             #########   EXPORT   #######
-            export.export_modified(config, case_name, ALL_sections, z_planes, pitch, chord, mesh, mesh_DUST, connectivity_DUST, coordinates_DUST)
+            export.export_mesh(config, case_name, ALL_sections, z_planes, pitch, chord, mesh, mesh_DUST, connectivity_DUST, coordinates_DUST)
+
+def run_blade(config):
+
+    ## First, create sections ##
+    sections = spanwise_planes(config["GENERATE_SURFACE"]["z_min_sec"], config["GENERATE_SURFACE"]["z_max_sec"], config["GENERATE_SURFACE"]["n_sec"], config["GENERATE_SURFACE"]["dist_sec"], config["GENERATE_SURFACE"]["r_R_sec"])
+    
+    collect_pitch_sec = np.array(ast.literal_eval(config["GENERATE_SURFACE"]["collect_pitch_sec"])).astype(float)
+    scale_sec = np.array(ast.literal_eval(config["GENERATE_SURFACE"]["scale_sec"])).astype(float)
+
+    ##  Create spanwise planes (FOR MESHING)  ###
+    z_planes = spanwise_planes(config["PANEL"]["z_min"], config["PANEL"]["z_max"], config["PANEL"]["N_span"], config["PANEL"]["dist_span"], config["PANEL"]["r_R"])
+
+    for coll_pitch_sec in collect_pitch_sec:
+        for chord_scale_sec in scale_sec:
+
+            if config["GENERATE_SURFACE"]["collect_pitch_sec"] == '[0]' and config["GENERATE_SURFACE"]["scale_sec"] == '[1]':
+                case_name_sec = '{}_{}n_sec'.format(config["FILE"]["name_tag"], config["GENERATE_SURFACE"]["n_sec"])
+            else:
+                case_name_sec = '{}_{}n_sec_{:.2f}_delta_coll_pitch_{:.2f}_scale'.format(config["FILE"]["name_tag"], config["GENERATE_SURFACE"]["n_sec"], coll_pitch_sec, chord_scale_sec)
+
+            ######  GENERATE BLADE  ######
+            blade = create_Blade(config, sections, coll_pitch_sec, np.zeros_like(sections), scale_sec)
+
+            #####     If mesh will be generated, DO THAT  #####
+            if config["GENERATE_SURFACE"]["generate_mesh"] in ['yes', True, 'Yes']:
+                
+                ### Convert the blade into a Workplane object to mesh it
+                blade_WP = cq.Workplane(blade)      # cq.Workplane
+
+                ######  GENERATE POINTS  (LE is already defined, and TE is already closed !!)######
+                ALL_sections, ALL_sections_DUST = mesh_blade.mesh(blade_WP, config, z_planes, coll_pitch_sec, np.zeros_like(z_planes), scale_sec)
+                
+                ######  GENERATE MESH   #######
+                mesh, mesh_DUST, connectivity_DUST, coordinates_DUST = generate_mesh(ALL_sections, ALL_sections_DUST, close_TE='yes')
+
+                #########   EXPORT MESH   #######
+                export.export_blade_mesh(config, case_name_sec, ALL_sections, mesh, mesh_DUST, connectivity_DUST, coordinates_DUST)
+
+            #########   EXPORT BLADE   #######
+            export.export_blade(config, case_name_sec, blade)
+

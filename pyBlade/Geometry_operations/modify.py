@@ -1,5 +1,5 @@
 import numpy as np
-from . import extract_info
+from . import extract
 from .Rotation import Rotate
 
 def remove_TE(edge_objects):
@@ -18,7 +18,7 @@ def remove_TE(edge_objects):
     """
 
     ## Get the TE
-    TE, _, _ = extract_info.get_TE(edge_objects)
+    TE, _, _ = extract.get_TE(edge_objects)
 
     ## Remove the TE from the edges
     for i, edge in enumerate(edge_objects):

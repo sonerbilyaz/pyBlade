@@ -7,17 +7,13 @@ from ..Geometry_operations import extract, modify
 from ..Geometry_operations.Rotation import Rotate
 
 ## Get coordinates ##
-def get_coords(blade, config, z_planes, collective_pitch, twist_local, chord_scale):
+def mesh(blade, config, z_planes, collective_pitch, twist_local, chord_scale):
     
     ### Generate parametric points for airfoil section ###
     parametric_points, Node_ID_one_surf = airfoil_distribution(int(config["PANEL"]["N_chord"]), config["PANEL"]["dist_chord"])
     
-    
     ALL_sections = []
     ALL_sections_DUST = []
-
-    ALL_sections_pitch = []
-    ALL_sections_chord = []
 
     for z, twist in zip(z_planes, twist_local):
         # Create a section of the blade using the defined z-coord
@@ -34,7 +30,18 @@ def get_coords(blade, config, z_planes, collective_pitch, twist_local, chord_sca
             edge_objects = edge_objects[::-1]
         
         ### Extract the Upper and Lower Surfaces Seperately
-        upper_surface, lower_surface = extract.get_surfaces(config, edge_objects)
+
+        # Get the midpoints of the edges
+        edges_midpoints = np.concatenate([np.array(edge.positionAt(0.5).toTuple()).reshape((1,3)) for edge in edge_objects], axis=0)
+
+        ## Lower midpoint y-coordinate will be upper surface 
+        if edges_midpoints[0,1] < edges_midpoints[1,1]:
+            upper_surface = edge_objects[0]     ## Edge object
+            lower_surface = edge_objects[1]     ## Edge object
+
+        else:
+            upper_surface = edge_objects[1]     ## Edge object
+            lower_surface = edge_objects[0]     ## Edge object
         
         ## Assign the parametric points between 0 and 1 to the upper and lower surfaces
         parametric_points_up = parametric_points 
@@ -73,20 +80,12 @@ def get_coords(blade, config, z_planes, collective_pitch, twist_local, chord_sca
         data = data[sorted_indices]
         
         ## Make sectional changes, if there are any ###
-        if np.any(twist_local!=0) or chord_scale!=1:
+        if np.any(twist_local!=0) or np.any(chord_scale!=1):
             data = modify.change_span(data, Node_ID_one_surf, twist, chord_scale)
 
-        data_DUST = data.copy()
+        # For DUST output, th elast repeated point at the TE should be removed 
+        data_DUST = data[1:,:].copy()
 
-        # Check for closing the TE[:,1:]*1e-03
-        if config["SURFACE"]["close_TE"] in ['yes', True, 'Yes']:
-            data, pitch, chord = modify.close_TE_gap(data, Node_ID_one_surf)
-            ## Coordinates will be different for DUST basic mesh !! 
-            # Last repeated point at the TE should be removed 
-            data_DUST = data[1:,:].copy()
-            # After closing the TE, make sure that upper TE node and lower TE point is the same for the NVLM solver (1st and last point)
-            data[-1,1:] = data[0,1:]
-        
         # Convert from mm to meter
         data[:,1:] = data[:,1:]*1e-03
         data_DUST[:,1:] = data_DUST[:,1:]*1e-03
@@ -108,10 +107,8 @@ def get_coords(blade, config, z_planes, collective_pitch, twist_local, chord_sca
         ## Sectional points should go from lower to upper TE !!!
         data[:,0] = data[:,0][::-1]     ## Reverse node id
         ALL_sections.append(data[::-1]) ## Reverse points order
-        ALL_sections_pitch.append(pitch)
-        ALL_sections_chord.append(chord)
 
         data_DUST[:,0] = data_DUST[:,0][::-1]     ## Reverse node id
         ALL_sections_DUST.append(data_DUST[::-1]) ## Reverse points order
                     
-    return ALL_sections, ALL_sections_DUST, np.asarray(ALL_sections_pitch), np.asarray(ALL_sections_chord)
+    return ALL_sections, ALL_sections_DUST

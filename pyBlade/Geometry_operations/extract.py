@@ -35,7 +35,7 @@ def get_TE(edge_objects):
     ## Get the upper and lower vertices of the TE
     TE_vertices = np.asarray([np.array(v.toTuple()) for v in TE.Vertices()])
     
-    TE_v_up = TE_vertices[np.argmin(TE_vertices[:,1])]      ## Lowest y-coordinate will be upper TE vertex  
+    TE_v_up = TE_vertices[np.argmin(TE_vertices[:,1])]      ## Lowest y-coordinate will be upper TE vertex
     TE_v_low = TE_vertices[np.argmax(TE_vertices[:,1])]     ## Highest y-coordinate will be upper TE vertex  
 
     ### Get the edges adjacent to the TE at the upper and lower surfaces
@@ -51,7 +51,7 @@ def get_TE(edge_objects):
 
     return TE, TE_upper_edge, TE_lower_edge
 
-def extract_surfaces(config, edges):
+def get_surfaces(config, edges):
     """
         Extracts the upper and lower surfaces, seperately 
         
@@ -70,17 +70,19 @@ def extract_surfaces(config, edges):
         
     """
 
+    ###################     TE IDENTIFICATION       ###################
     ## First, get the edges adjacent to the TE at the upper&lower surfaces 
     _, TE_upper_edge, TE_lower_edge = get_TE(edges)
     
     # Then, remove TE from the edges to begin the work
     edges = modify.remove_TE(edges)
+    ###################################################################
 
     ### Find the LE vertex ###
     vertices = [np.array(v.toTuple()) for edge in edges for v in edge.vertices()]
     vertices = np.asarray(vertices)
     
-    if config["IDENTIFY"]["find_LE"] in ['yes', True, 'Yes']:
+    if config["SURFACE"]["find_LE"] in ['yes', True, 'Yes']:
         ## SPLIT THE FACE INTO 2 WHICH CONTAINS LE VERTEX 
 
         ## Get the edge midpoints (lowest x-coord of the midpoint will belong the the LE edge)
