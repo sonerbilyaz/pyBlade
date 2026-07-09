@@ -7,7 +7,7 @@ from ..Geometry_operations import extract, modify
 from ..Geometry_operations.Rotation import Rotate
 
 ## Get coordinates ##
-def get_coords(blade, config, z_planes, collective_pitch, twist_local, chord_scale):
+def get_coords(blade, config, z_planes, collective_pitch, twist_local, chord_scale, sweep_deg):
     
     ### Generate parametric points for airfoil section ###
     parametric_points, Node_ID_one_surf = airfoil_distribution(int(config["PANEL"]["N_chord"]), config["PANEL"]["dist_chord"])
@@ -18,6 +18,8 @@ def get_coords(blade, config, z_planes, collective_pitch, twist_local, chord_sca
 
     ALL_sections_pitch = []
     ALL_sections_chord = []
+
+    r_root = np.min(z_planes)
 
     for z, twist in zip(z_planes, twist_local):
         # Create a section of the blade using the defined z-coord
@@ -58,10 +60,6 @@ def get_coords(blade, config, z_planes, collective_pitch, twist_local, chord_sca
         upper_points = np.asarray([np.array(upper_surface.positionAt(t).toTuple()) for t in parametric_points_up])
         lower_points = np.asarray([np.array(lower_surface.positionAt(t).toTuple()) for t in parametric_points_low])
         
-        ## Increase pitch, if there are any ###
-        upper_points = modify.pitch_increase(upper_points, collective_pitch)
-        lower_points = modify.pitch_increase(lower_points, collective_pitch)
-
         # Insert Node ID  (From upper TE to lower TE)
         data_up  = np.insert(upper_points[:,:], 0, Node_ID_up, axis=1)    
         data_low = np.insert(lower_points[1:,:], 0, Node_ID_low,axis=1)
@@ -72,20 +70,16 @@ def get_coords(blade, config, z_planes, collective_pitch, twist_local, chord_sca
         sorted_indices = np.argsort(data[:,0])
         data = data[sorted_indices]
         
-        ## Make sectional changes, if there are any ###
-        if np.any(twist_local!=0) or chord_scale!=1:
-            data = modify.change_span(data, Node_ID_one_surf, twist, chord_scale)
-
         data_DUST = data.copy()
 
-        # Check for closing the TE[:,1:]*1e-03
-        if config["SURFACE"]["close_TE"] in ['yes', True, 'Yes']:
-            data, pitch, chord = modify.close_TE_gap(data, Node_ID_one_surf)
-            ## Coordinates will be different for DUST basic mesh !! 
-            # Last repeated point at the TE should be removed 
-            data_DUST = data[1:,:].copy()
-            # After closing the TE, make sure that upper TE node and lower TE point is the same for the NVLM solver (1st and last point)
-            data[-1,1:] = data[0,1:]
+        ##################    MODIFY AIRFOIL SECTION (INCLUDES "close_TE")    ##################
+        data, pitch, chord = modify.modify_airfoil(data, z, Node_ID_one_surf, collective_pitch, chord_scale, sweep_deg, r_root)
+        ## Coordinates will be different for DUST basic mesh !! 
+        # Last repeated point at the TE should be removed 
+        data_DUST = data[1:,:].copy()
+        # After closing the TE, make sure that upper TE node and lower TE points are the same for the NVLM solver (1st and last point)
+        data[-1,1:] = data[0,1:]
+        ################################################################################################
         
         # Convert from mm to meter
         data[:,1:] = data[:,1:]*1e-03
