@@ -7,7 +7,7 @@ from ..Geometry_operations import extract, modify
 from ..Geometry_operations.Rotation import Rotate
 
 ## Get coordinates ##
-def get_coords(blade, config, z_planes, collective_pitch, twist_local, chord_scale, sweep_deg):
+def get_coords(blade, config, z_planes, collective_pitch, twist_local, chord_scale, sweep_deg, dihedral_deg):
     
     ### Generate parametric points for airfoil section ###
     parametric_points, Node_ID_one_surf = airfoil_distribution(int(config["PANEL"]["N_chord"]), config["PANEL"]["dist_chord"])
@@ -73,7 +73,7 @@ def get_coords(blade, config, z_planes, collective_pitch, twist_local, chord_sca
         data_DUST = data.copy()
 
         ##################    MODIFY AIRFOIL SECTION (INCLUDES "close_TE")    ##################
-        data, pitch, chord = modify.modify_airfoil(data, z, Node_ID_one_surf, collective_pitch, chord_scale, sweep_deg, r_root)
+        data, pitch, chord = modify.modify_airfoil(data, z, Node_ID_one_surf, collective_pitch, chord_scale, sweep_deg, r_root, dihedral_deg)
         ## Coordinates will be different for DUST basic mesh !! 
         # Last repeated point at the TE should be removed 
         data_DUST = data[1:,:].copy()

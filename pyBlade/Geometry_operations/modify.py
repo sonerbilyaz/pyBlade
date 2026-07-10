@@ -43,8 +43,16 @@ def sweep_increase(points, sweep_deg, z_span, r_root):
 
     return points
 
+def dihedral_increase(points, dihedr_deg, z_span, r_root):
+    
+    dihedral = np.tan(np.radians(dihedr_deg)) * (z_span - r_root)
 
-def modify_airfoil(points, z_span, Node_IDs_upper_surface, coll_pitch, scale, sweep, r_root, n=10, x_0 = 0.7):
+    points[:,2] = points[:,2] - dihedral
+
+    return points
+
+
+def modify_airfoil(points, z_span, Node_IDs_upper_surface, coll_pitch, scale, sweep, r_root, dihedral, n=10, x_0 = 0.7):
     
     # -----------------------  Get the information from the section -----------------------
     num_points = points.shape[0]
@@ -93,7 +101,7 @@ def modify_airfoil(points, z_span, Node_IDs_upper_surface, coll_pitch, scale, sw
     points_origin_xy[0,0], points_origin_xy[-1,0] = 0.75, 0.75
     """ ############################################################################  """
 
-    #######     1) CLOSE TE ??      #######
+    #######     1) CLOSE TE ??          #######
     # Get the upper and lower surfaces coordinates
     upper_surface = points_origin_xy[0:LE_ID,:]    
     lower_surface = points_origin_xy[LE_ID:,:]
@@ -108,10 +116,10 @@ def modify_airfoil(points, z_span, Node_IDs_upper_surface, coll_pitch, scale, sw
     lower_surface[:,1] = lower_surface[:,1] - w_x_low*(TE_length/chord_length)/2
     points_origin_xy = np.vstack((upper_surface, lower_surface))
     
-    #######     2) COLL PITCH        #######
+    #######     2) COLL PITCH           #######
     points_origin_xy = pitch_increase(points_origin_xy, coll_pitch)
 
-    #######     3) CHORD SCALE       #######
+    #######     3) CHORD SCALE          #######
     points_origin_xy = points_origin_xy * scale
 
     
@@ -135,10 +143,13 @@ def modify_airfoil(points, z_span, Node_IDs_upper_surface, coll_pitch, scale, sw
     ### Move to Original position ###
     points_new[:,1:] = points_new[:,1:] + quart_chord_coords * np.ones_like(points[:,1:])
 
-    #######     4) SWEEP             #######
+    #######     4) SWEEP                #######
     points_new = sweep_increase(points_new, sweep, z_span, r_root)
 
-    return points_new, np.rad2deg(angle_radians), chord_length
+    #######     5) DIHEDRAL/ANHEDRAL    #######
+    points_new = dihedral_increase(points_new, dihedral, z_span, r_root)
+
+    return points_new, np.rad2deg(angle_radians + coll_pitch), chord_length*scale
 
 def change_span(points, Node_IDs_upper_surface, twist_local, taper_local):
 
