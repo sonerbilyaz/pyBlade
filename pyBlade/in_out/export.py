@@ -15,20 +15,21 @@ def export_mesh(config, case_name, ALL_sections: list, z_planes, pitch, chord, m
 
     ###################     Normal mesh export     ###################
     meshio.write(f'{case_dir}/{case_name}.vtk', mesh, file_format='vtk')
+    rotation_axis = [0, 0, 1]
 
     ## Generate array for ALL_sections (NODE_ID + coordinates)
     ALL_sections_array = np.concatenate(ALL_sections, axis=0)
 
     with open(f'{case_dir}/{config["FILE"]["name_tag"]}.pts', 'w') as file:
         file.write('######## Panel parameters ########\n')
-        # file.write(f'type={surf_type}\n')
-        file.write(f'n_blades={int(config["SURFACE"]["n_blades"])}\n\n')
+        file.write(f'type={config["SURFACE"]["type"]}\n')
+        file.write(f'n_blades={config["SURFACE"]["n_blades"]}\n\n')
         # file.write(f'rotation_center={rotation_center}\n')
-        # file.write(f'rotation_axis={rotation_axis}\n')
+        file.write(f'rotation_axis={rotation_axis}\n')
         
         file.write('n_span_all= {}\n'.format(len(ALL_sections)))
         file.write('n_points={}\n'.format(len(ALL_sections[0][:,0])))
-        file.write('######## End of parameters ########\n')
+        file.write('######## End of parameters ########\n')        
         
         ## Write the section coordinates ##                    
         np.savetxt(file, ALL_sections_array, delimiter='\t', fmt=['%.0f','%.9f','%.9f','%.9f'], comments='')
@@ -90,21 +91,22 @@ def export_blade_mesh(config, case_name_sec, ALL_sections: list, mesh, mesh_DUST
 
     ###################     Normal mesh export     ###################
     meshio.write(f'{case_dir}/{case_name_sec}.vtk', mesh, file_format='vtk')
+    rotation_axis = [0, 0, 1]
 
     ## Generate array for ALL_sections (NODE_ID + coordinates)
     ALL_sections_array = np.concatenate(ALL_sections, axis=0)
 
     with open(f'{case_dir}/{case_name_sec}.pts', 'w') as file:
         file.write('######## Panel parameters ########\n')
-        # file.write(f'type={surf_type}\n')
-        file.write(f'n_blades={int(config["SURFACE"]["n_blades"])}\n\n')
+        file.write(f'type={config["SURFACE"]["type"]}\n')
+        file.write(f'n_blades={config["SURFACE"]["n_blades"]}\n\n')
         # file.write(f'rotation_center={rotation_center}\n')
-        # file.write(f'rotation_axis={rotation_axis}\n')
+        file.write(f'rotation_axis={rotation_axis}\n')
         
         file.write('n_span_all= {}\n'.format(len(ALL_sections)))
         file.write('n_points={}\n'.format(len(ALL_sections[0][:,0])))
         file.write('######## End of parameters ########\n')
-        
+
         ## Write the section coordinates ##                    
         np.savetxt(file, ALL_sections_array, delimiter='\t', fmt=['%.0f','%.9f','%.9f','%.9f'], comments='')
 
