@@ -20,26 +20,34 @@ def run_mesh(config):
     scale = np.array(ast.literal_eval(config["PANEL"]["scale"])).astype(float)
     sweep_angle = np.array(ast.literal_eval(config["PANEL"]["sweep"])).astype(float)
     dihedral_angle = np.array(ast.literal_eval(config["PANEL"]["dihedral"])).astype(float)
-    
+    twist_tip = np.array(ast.literal_eval(config["PANEL"]["twist_tip"])).astype(float)
+    twist_root = np.array(ast.literal_eval(config["PANEL"]["twist_root"])).astype(float)
+
+    twist_span = np.concatenate([[twist_tip], [twist_root]], axis=0)
+
     for coll_pitch in collect_pitch:
         for chord_scale in scale:
             for sweep in sweep_angle:
                 for dihedral in dihedral_angle:
-                    no_change = config["PANEL"]["collect_pitch"] == '[0]' and config["PANEL"]["scale"] == '[1]' and config["PANEL"]["sweep"] == '[0]' and config["PANEL"]["dihedral"] == '[0]'
-                    
-                    if no_change:
-                        case_name = config["FILE"]["name_tag"]                
-                    else:
-                        case_name = '{}_{:.1f}deg_coll_pitch_{:.2f}_scale_{:.1f}deg_sweep_{:.1f}deg_dihedr'.format(config["FILE"]["name_tag"], coll_pitch, chord_scale, sweep, dihedral)
-
-                    ######  GENERATE POINTS  ######
-                    ALL_sections, ALL_sections_DUST, pitch, chord = points.get_coords(blade, config, z_planes, coll_pitch, np.zeros_like(z_planes), chord_scale, sweep, dihedral)
+                    for i in range(twist_span.shape[1]):
+                        twist_tip, twist_root = twist_span[0,i], twist_span[1,i]
                         
-                    ######  GENERATE MESH   #######
-                    mesh, mesh_DUST, connectivity_DUST, coordinates_DUST = generate_mesh(ALL_sections, ALL_sections_DUST, config["SURFACE"]["close_TE"])
+                        no_change_twist = twist_root == 0 and twist_tip == 0
+                        no_change_uniform = config["PANEL"]["collect_pitch"] == '[0]' and config["PANEL"]["scale"] == '[1]' and config["PANEL"]["sweep"] == '[0]' and config["PANEL"]["dihedral"] == '[0]'
+                        
+                        if no_change_twist and no_change_uniform:
+                            case_name = config["FILE"]["name_tag"]                
+                        else:
+                            case_name = '{}_{:.1f}deg_coll_pitch_{:.2f}_scale_{:.1f}deg_sweep_{:.1f}deg_dihedr_{}-{}deg_twist'.format(config["FILE"]["name_tag"], coll_pitch, chord_scale, sweep, dihedral, twist_tip, twist_root)
 
-                    #########   EXPORT   #######
-                    export.export_mesh(config, case_name, ALL_sections, z_planes, pitch, chord, mesh, mesh_DUST, connectivity_DUST, coordinates_DUST)
+                        ######  GENERATE POINTS  ######
+                        ALL_sections, ALL_sections_DUST, pitch, chord = points.get_coords(blade, config, z_planes, coll_pitch, chord_scale, sweep, dihedral, twist_tip, twist_root)
+                            
+                        ######  GENERATE MESH   #######
+                        mesh, mesh_DUST, connectivity_DUST, coordinates_DUST = generate_mesh(ALL_sections, ALL_sections_DUST, config["SURFACE"]["close_TE"])
+
+                        #########   EXPORT   #######
+                        export.export_mesh(config, case_name, ALL_sections, z_planes, pitch, chord, mesh, mesh_DUST, connectivity_DUST, coordinates_DUST)
 
 def run_blade(config):
 

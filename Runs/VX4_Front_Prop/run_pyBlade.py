@@ -16,4 +16,4 @@ elif config["GENERATE_SURFACE"]["generate_blade"] in ['yes', True, 'Yes']:
     run.run_blade(config)
 
 end_time = timer()  # End the timer
-print(f"Code executed in: {end_time - start_time:.6f} seconds")
+print(f"Code executed in: {end_time - start_time:.6f} seconds") 
