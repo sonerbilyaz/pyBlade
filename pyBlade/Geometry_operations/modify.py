@@ -149,7 +149,7 @@ def modify_airfoil(points, z_span, Node_IDs_upper_surface, coll_pitch, scale, sw
     #######     5) DIHEDRAL/ANHEDRAL    #######
     points_new = dihedral_increase(points_new, dihedral, z_span, r_root)
 
-    return points_new, np.rad2deg(angle_radians + coll_pitch), chord_length*scale
+    return points_new, np.rad2deg(angle_radians) + coll_pitch, chord_length*scale
 
 def change_span(points, Node_IDs_upper_surface, twist_local, taper_local):
 
