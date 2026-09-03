@@ -2,7 +2,7 @@ import numpy as np, ast, cadquery as cq         # type: ignore
 
 from .in_out import export
 
-from .Distributions.distributions import spanwise_disribution as spanwise_planes
+from .Distributions.distributions import spanwise_disribution
 from .Point_coordinates import point_generation as points
 from .Mesher.mesh import generate_mesh
 from .Blade_Generate.blade import create_Blade
@@ -14,7 +14,7 @@ def run_mesh(config):
     blade = cq.importers.importStep(f'{config["FILE"]["stp_file"]}')
     
     ## Create spanwise planes ###
-    z_planes = spanwise_planes(config["PANEL"]["z_min"], config["PANEL"]["z_max"], config["PANEL"]["N_span"], config["PANEL"]["dist_span"], config["PANEL"]["r_R"])
+    z_planes = spanwise_disribution(config["PANEL"]["z_min"], config["PANEL"]["z_max"], config["PANEL"]["N_span"], config["PANEL"]["dist_span"])
 
     collect_pitch = np.array(ast.literal_eval(config["PANEL"]["collect_pitch"])).astype(float)
     scale = np.array(ast.literal_eval(config["PANEL"]["scale"])).astype(float)
@@ -38,7 +38,7 @@ def run_mesh(config):
                         if no_change_twist and no_change_uniform:
                             case_name = config["FILE"]["name_tag"]                
                         else:
-                            case_name = '{}_{:.1f}deg_coll_pitch_{:.2f}_scale_{:.1f}deg_sweep_{:.1f}deg_dihedr_{}-{}deg_twist'.format(config["FILE"]["name_tag"], coll_pitch, chord_scale, sweep, dihedral, twist_tip, twist_root)
+                            case_name = '{}_{:.1f}deg_coll_pitch_{:.2f}_scale_{:.1f}deg_sweep_{:.2f}deg_dihedr_{:.2f}-{:.2f}deg_twist'.format(config["FILE"]["name_tag"], coll_pitch, chord_scale, sweep, dihedral, twist_tip, twist_root)
 
                         ######  GENERATE POINTS  ######
                         ALL_sections, ALL_sections_DUST, pitch, chord = points.get_coords(blade, config, z_planes, coll_pitch, chord_scale, sweep, dihedral, twist_tip, twist_root)
@@ -52,13 +52,13 @@ def run_mesh(config):
 def run_blade(config):
 
     ## First, create sections ##
-    sections = spanwise_planes(config["GENERATE_SURFACE"]["z_min_sec"], config["GENERATE_SURFACE"]["z_max_sec"], config["GENERATE_SURFACE"]["n_sec"], config["GENERATE_SURFACE"]["dist_sec"], config["GENERATE_SURFACE"]["r_R_sec"])
+    sections = spanwise_disribution(config["GENERATE_SURFACE"]["z_min_sec"], config["GENERATE_SURFACE"]["z_max_sec"], config["GENERATE_SURFACE"]["n_sec"], config["GENERATE_SURFACE"]["dist_sec"])
     
     collect_pitch_sec = np.array(ast.literal_eval(config["GENERATE_SURFACE"]["collect_pitch_sec"])).astype(float)
     scale_sec = np.array(ast.literal_eval(config["GENERATE_SURFACE"]["scale_sec"])).astype(float)
 
     ##  Create spanwise planes (FOR MESHING)  ###
-    z_planes = spanwise_planes(config["PANEL"]["z_min"], config["PANEL"]["z_max"], config["PANEL"]["N_span"], config["PANEL"]["dist_span"], config["PANEL"]["r_R"])
+    z_planes = spanwise_disribution(config["PANEL"]["z_min"], config["PANEL"]["z_max"], config["PANEL"]["N_span"], config["PANEL"]["dist_span"])
 
     for coll_pitch_sec in collect_pitch_sec:
         for chord_scale_sec in scale_sec:

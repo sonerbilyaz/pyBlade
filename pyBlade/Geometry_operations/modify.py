@@ -61,7 +61,7 @@ def modify_airfoil(points, z_span, Node_IDs_upper_surface, coll_pitch, scale, sw
     TE_upper = points[0,1:]
     TE_lower = points[-1,1:]
     
-    TE_midpoint = (TE_lower + TE_lower)/2
+    TE_midpoint = (TE_lower + TE_upper)/2
     TE_length = np.linalg.norm(TE_upper - TE_lower)
     
     # Last point in the upper surface is LE. Get this ID and find the coordinates at this ID in "points" array

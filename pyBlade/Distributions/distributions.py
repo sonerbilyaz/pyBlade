@@ -38,10 +38,10 @@ def airfoil_distribution(num_points, dist):
     
     return points, Node_ID_one_surf.astype(int)
 
-def spanwise_disribution(z_min, z_max, spanwise_panel_num, dist, r_R):
+def spanwise_disribution(z_min, z_max, spanwise_panel_num, dist, n=1.2):
 
     ## First, convert strings from config file into floats
-    z_min, z_max, spanwise_panel_num, r_R = float(z_min), float(z_max), int(spanwise_panel_num), float(r_R)
+    z_min, z_max, spanwise_panel_num, n = float(z_min), float(z_max), int(spanwise_panel_num), float(n)
     # Normalizing function when we shift clustering location of the points between (0 and 1)
     def normalize(data, min_val, max_val):
         return min_val + (data - data.min()) * (max_val - min_val) / (data.max() - data.min())
@@ -53,24 +53,25 @@ def spanwise_disribution(z_min, z_max, spanwise_panel_num, dist, r_R):
         points = 0.5 * (1 - np.cos(angles))
         # Map points to [z_min, z_max]
         points = z_min + points * (z_max - z_min)
+
+        ## Remove the 2nd last and 2nd first points since it creates skew panels
+        points = np.delete(points,-2)
+        points = np.delete(points,[1,2])
+
         return points
     
-    if dist == "cosine_TIP":
-        angles  = np.linspace(np.radians(0), np.radians(90), int(2.2*(1-r_R)*spanwise_panel_num))
+    if dist == "polyn_TIP":
         
-        # Uniform part towards root. Remove extra end point
-        x1 = np.linspace(0, r_R, int(r_R * spanwise_panel_num))
-        x1 = np.delete(x1, -1)
-        # cosine TIP part
-        x2 = normalize(np.sin(angles), r_R, 1)
+        ### First, get uniform distribution
+        s = np.linspace(0.0, 1.0, spanwise_panel_num)
+        ### Then, make it denser towards 1 with power law
+        x = 1.0 - (1.0 - s)**n
+
+        # Map points x to [z_min, z_max]
+        points = z_min + x * (z_max - z_min)
         
-        # Connect them
-        points = np.hstack((x1,x2))
-        # Map points to [z_min, z_max]
-        points = z_min + points * (z_max - z_min)
-        
-        ## Remove the last 3rd and 2nd elements since it creates skew panels
-        points = np.delete(points,[-2])
+        # ## Remove the last 3rd and 2nd elements since it creates skew panels
+        # points = np.delete(points,[-2])
         
         return points
     
