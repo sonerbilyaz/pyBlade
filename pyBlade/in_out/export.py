@@ -2,7 +2,7 @@ import cadquery as cq       # type: ignore
 import meshio
 import os, numpy as np
 
-def export_mesh(config, case_name, ALL_sections: list, z_planes, pitch, chord, mesh, mesh_DUST, connectivity_DUST, coordinates_DUST, DUST_export = True):
+def export_mesh(config, case_name, ALL_sections: list, z_planes, pitch, chord, camber, thickness, mesh, mesh_DUST, connectivity_DUST, coordinates_DUST, DUST_export = True):
 
     # Create output directory if it is absent #
     if os.path.isdir(config["FILE"]["output_dir"]) is False:
@@ -37,6 +37,10 @@ def export_mesh(config, case_name, ALL_sections: list, z_planes, pitch, chord, m
     ###    Export pitch and chord   ###
     np.savetxt(f'{case_dir}/{config["FILE"]["name_tag"]}_pitch_chord.txt', 
                np.concatenate([z_planes[:, None]/float(config["PANEL"]["z_max"]), chord[:, None], pitch[:,None]], axis=1), header='r_R' + '\t' + 'chord (mm)' + '\t' +'pitch(deg)', delimiter='\t')
+
+    ###    Export camber and thickness   ###
+    np.savetxt(f'{case_dir}/{config["FILE"]["name_tag"]}_camber_thickness.txt', 
+                np.concatenate([z_planes[:, None]/float(config["PANEL"]["z_max"]), camber[:, None], thickness[:,None]], axis=1), header='r_R' + '\t' + 'camber (c/chord)' + '\t' +'thickness (t/chord)', delimiter='\t')
 
     if DUST_export:
 

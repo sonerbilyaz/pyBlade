@@ -16,8 +16,8 @@ def get_coords(blade, config, z_planes, collective_pitch, chord_scale, sweep_deg
     ALL_sections = []
     ALL_sections_DUST = []
 
-    ALL_sections_pitch = []
-    ALL_sections_chord = []
+    ALL_sections_pitch, ALL_sections_chord = [], []
+    ALL_sections_camber, ALL_sections_thickness = [], []
 
     r_root = np.min(z_planes)
     twist_local = np.linspace(twist_root, twist_tip, len(z_planes))
@@ -74,7 +74,7 @@ def get_coords(blade, config, z_planes, collective_pitch, chord_scale, sweep_deg
         data_DUST = data.copy()
 
         ##################    MODIFY AIRFOIL SECTION (INCLUDES "close_TE")    ##################
-        data, pitch, chord = modify.modify_airfoil(data, z, Node_ID_one_surf, collective_pitch + twist, chord_scale, sweep_deg, r_root, dihedral_deg)
+        data, pitch, chord, camber, thickness = modify.modify_airfoil(data, z, Node_ID_one_surf, collective_pitch + twist, chord_scale, sweep_deg, r_root, dihedral_deg)
         ## Coordinates will be different for DUST basic mesh !! 
         # Last repeated point at the TE should be removed 
         data_DUST = data[1:,:].copy()
@@ -105,8 +105,10 @@ def get_coords(blade, config, z_planes, collective_pitch, chord_scale, sweep_deg
         ALL_sections.append(data[::-1]) ## Reverse points order
         ALL_sections_pitch.append(pitch)
         ALL_sections_chord.append(chord)
+        ALL_sections_camber.append(camber)
+        ALL_sections_thickness.append(thickness)
 
         data_DUST[:,0] = data_DUST[:,0][::-1]     ## Reverse node id
         ALL_sections_DUST.append(data_DUST[::-1]) ## Reverse points order
                     
-    return ALL_sections, ALL_sections_DUST, np.asarray(ALL_sections_pitch), np.asarray(ALL_sections_chord)
+    return ALL_sections, ALL_sections_DUST, np.asarray(ALL_sections_pitch), np.asarray(ALL_sections_chord), np.asarray(ALL_sections_camber), np.asarray(ALL_sections_thickness)

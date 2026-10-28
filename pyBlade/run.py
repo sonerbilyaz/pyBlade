@@ -41,13 +41,13 @@ def run_mesh(config):
                             case_name = '{}_{:.1f}deg_coll_pitch_{:.2f}_scale_{:.1f}deg_sweep_{:.2f}deg_dihedr_{:.2f}-{:.2f}deg_twist'.format(config["FILE"]["name_tag"], coll_pitch, chord_scale, sweep, dihedral, twist_tip, twist_root)
 
                         ######  GENERATE POINTS  ######
-                        ALL_sections, ALL_sections_DUST, pitch, chord = points.get_coords(blade, config, z_planes, coll_pitch, chord_scale, sweep, dihedral, twist_tip, twist_root)
+                        ALL_sections, ALL_sections_DUST, pitch, chord, camber, thickness = points.get_coords(blade, config, z_planes, coll_pitch, chord_scale, sweep, dihedral, twist_tip, twist_root)
                             
                         ######  GENERATE MESH   #######
                         mesh, mesh_DUST, connectivity_DUST, coordinates_DUST = generate_mesh(ALL_sections, ALL_sections_DUST, config["SURFACE"]["close_TE"])
 
                         #########   EXPORT   #######
-                        export.export_mesh(config, case_name, ALL_sections, z_planes, pitch, chord, mesh, mesh_DUST, connectivity_DUST, coordinates_DUST)
+                        export.export_mesh(config, case_name, ALL_sections, z_planes, pitch, chord, camber, thickness, mesh, mesh_DUST, connectivity_DUST, coordinates_DUST)
 
 def run_blade(config):
 

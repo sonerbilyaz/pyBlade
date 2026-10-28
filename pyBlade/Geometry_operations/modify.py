@@ -101,7 +101,7 @@ def modify_airfoil(points, z_span, Node_IDs_upper_surface, coll_pitch, scale, sw
     points_origin_xy[0,0], points_origin_xy[-1,0] = 0.75, 0.75
     """ ############################################################################  """
 
-    #######     1) CLOSE TE ??          #######
+    #######                 1) CLOSE TE ??              #######
     # Get the upper and lower surfaces coordinates
     upper_surface = points_origin_xy[0:LE_ID,:]    
     lower_surface = points_origin_xy[LE_ID:,:]
@@ -115,11 +115,25 @@ def modify_airfoil(points, z_span, Node_IDs_upper_surface, coll_pitch, scale, sw
     upper_surface[:,1] = upper_surface[:,1] + w_x_up*(TE_length/chord_length)/2
     lower_surface[:,1] = lower_surface[:,1] - w_x_low*(TE_length/chord_length)/2
     points_origin_xy = np.vstack((upper_surface, lower_surface))
+
+    #######         2) Get the camber and thickness     #######
+    #-------       Camber      -------#
+    camber_line = (points_origin_xy + points_origin_xy[::-1]) / 2   # (Nc,3)
+    ## Remove the repeating elements camber_line
+    camber_line = camber_line[:LE_ID+1]
+    ## ID of the max camber location (max y coordinate) 
+    id_max_c = np.abs(camber_line[:,1]).argmax()
+    ## Camber (y distance)
+    max_camber = np.abs(camber_line[id_max_c, 1])
     
-    #######     2) COLL PITCH           #######
+    #-------       Thickness      -------#
+    t = (points_origin_xy - points_origin_xy[::-1]) / 2   # (Nc,3)
+    max_thickness = 2*np.max(np.sqrt(np.einsum('ij,ij->i', t,t)))
+
+    #######         3) COLL PITCH                       #######
     points_origin_xy = pitch_increase(points_origin_xy, coll_pitch)
 
-    #######     3) CHORD SCALE          #######
+    #######         4) CHORD SCALE                      #######
     points_origin_xy = points_origin_xy * scale
 
     
@@ -149,7 +163,7 @@ def modify_airfoil(points, z_span, Node_IDs_upper_surface, coll_pitch, scale, sw
     #######     5) DIHEDRAL/ANHEDRAL    #######
     points_new = dihedral_increase(points_new, dihedral, z_span, r_root)
 
-    return points_new, np.rad2deg(angle_radians) + coll_pitch, chord_length*scale
+    return points_new, np.rad2deg(angle_radians) + coll_pitch, chord_length*scale, max_camber, max_thickness
 
 def change_span(points, Node_IDs_upper_surface, twist_local, taper_local):
 
